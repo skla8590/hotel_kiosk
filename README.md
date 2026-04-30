@@ -15,4 +15,4 @@ docker-compose down
 
 # API 명세서
 
-### URL: https://github.com/skla8590/Hotel_Kiosk.git
+### URL: http://localhost:8080/swagger-ui/index.html?urls.primaryName=REST+API#/
