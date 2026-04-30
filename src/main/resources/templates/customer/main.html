@@ -1,0 +1,302 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Kiosk</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" th:href="@{/css/customer/kiosk.css}"> <!-- 공통 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/header_language.css}"> <!-- 언어 헤더 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/2action_btns.css}"> <!-- 메인 버튼 2개 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/modal.css}">
+
+    <style>
+        /* ── CENTER: 호텔명 + 버튼 + 설명 바 ── */
+        .center-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10cqw;
+            padding: 4cqw 5cqw;
+        }
+
+        /* 호텔 로고, 이름 섹션 */
+        .hotel-section {
+            font-family: 'Playfair Display', serif;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3cqw;
+            margin-bottom: 5cqw;
+        }
+
+        .hotel-label {
+            font-size: 2.2cqw;
+            letter-spacing: 0.4em;
+            color: var(--green);
+            text-transform: uppercase;
+            opacity: 0.75;
+        }
+
+        .hotel-name-box {
+            width: 100%;
+            background: var(--surface);
+            border-radius: 2cqw;
+            border: 1px solid var(--border);
+            box-shadow: 0 0.6cqw 3cqw var(--shadow);
+            padding: 3cqw 5cqw;
+            text-align: center;
+        }
+
+        .hotel-name {
+            font-size: 7.5cqw;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: 0.08em;
+        }
+
+        .hotel-name em {
+            color: var(--green);
+            font-style: normal;
+        }
+
+        /* ── BOTTOM: 설명 바 ── */
+        .status-bar {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1.8cqw;
+            padding: 2cqw 4cqw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5cqw;
+            box-shadow: 0 0.3cqw 1.5cqw var(--shadow);
+        }
+
+        .status-dot {
+            width: 1.2cqw;
+            height: 1.2cqw;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 0 0.4cqw rgba(30, 77, 58, 0.2);
+            animation: pulse 2.5s infinite;
+            flex-shrink: 0
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0.4cqw rgba(30, 77, 58, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 0 0.8cqw rgba(30, 77, 58, 0.08);
+            }
+        }
+
+        .status-text {
+            font-size: 2.8cqw;
+            font-weight: 300;
+            color: var(--text-sub);
+            letter-spacing: 0.04em;
+        }
+
+        /* 입장 애니메이션 */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(2cqw);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            animation: fadeUp 0.5s ease both 0.05s;
+            opacity: 0;
+        }
+
+        .hotel-section {
+            animation: fadeUp 0.5s ease both 0.18s;
+            opacity: 0;
+        }
+
+        .actions-row {
+            animation: fadeUp 0.55s ease both 0.32s;
+            opacity: 0;
+        }
+
+        .status-bar {
+            animation: fadeUp 0.5s ease both 0.45s;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="kiosk">
+
+    <!-- Header: 언어 선택 -->
+    <div class="header">
+        <div class="lang-selector">
+            <button class="lang-btn active" onclick="setLang(this,'ko')">KOR</button>
+            <button class="lang-btn" onclick="setLang(this,'en')">ENG</button>
+        </div>
+    </div>
+
+    <!-- center-block: 호텔명 + 버튼 + 설명 바 -->
+    <div class="center-block">
+
+        <!-- hotel-section: hotel-label(인삿말) + hotel-name-box(호텔명) -->
+        <div class="hotel-section">
+            <div class="hotel-label">WELCOME TO</div>
+            <div class="hotel-name-box">
+                <div class="hotel-name"><em>J</em> Hotel</div>
+            </div>
+        </div>
+
+        <!-- 체크인 / 예약하기 버튼 -->
+        <div class="actions-row">
+
+            <button class="action-btn btn-left" onclick="ripple(event)">
+                <span class="btn-icon">🗝️</span>
+                <span class="btn-title" id="btn-checkin-title">체크인</span>
+                <span class="btn-sub"></span>
+
+            </button>
+
+            <button class="action-btn btn-right" onclick="ripple(event)">
+                <span class="btn-icon">📋</span>
+                <span class="btn-title" id="btn-reserve-title">예약하기</span>
+                <span class="btn-sub" id="btn-reserve-sub">현장 예약 / 숙박 연장</span>
+            </button>
+
+        </div>
+
+        <!-- 상태바: 버튼 바로 아래 -->
+        <div class="status-bar">
+            <div class="status-dot"></div>
+            <span class="status-text" id="status-text">원하시는 서비스를 선택해 주세요</span>
+        </div>
+
+    </div>
+
+    <!-- 웨이크 워드 활성화 모달 -->
+    <div class="modal-overlay hidden" id="aiWakeWord">
+        <div class="modal-box">
+<!--            <img th:src="@{/img/mike_icon.png}" class="wake-modal-icon" alt="마이크">-->
+            <div class="voice-bars" id="voiceBars">
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+            </div>
+            <span class="modal-msg" style="white-space: pre-line;">듣고 있습니다. 궁금하신 점을 말씀해주세요!</span>
+        </div>
+    </div>
+
+    <div class="bottom-spacer"></div>
+
+    <!-- 타임아웃 모달 -->
+    <div class="modal-overlay hidden" id="timeoutModal">
+        <div class="modal-box">
+            <p><span id="timeoutSec">10</span>초 후<br>초기 화면으로 돌아갑니다.</p>
+            <div class="modal-sub-msg">
+                계속 진행하시려면 화면을 클릭해 주세요.
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div id="testNotice">
+    <h3>Test Notice</h3>
+    <ul>
+        <li><strong>테스트 서브 타이틀:</strong> 테스트 내용</li>
+    </ul>
+    <div style="margin-top:15px; font-size:12px; color:#888;">
+        * 부가 설명, 주의사항 등
+    </div>
+</div>
+
+<script th:src="@{/js/customer/2actionBtns.js}"></script>
+<script th:src="@{/js/customer/ai_service/springai.js}"></script>
+<script th:src="@{/js/customer/modal.js}"></script>
+<script th:src="@{/js/customer/timeout.js}"></script>
+<script>
+    /* 뒤로가기로 접근(BFCache 복원)시, 애니메이션 효과 재실행 */
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) {
+            // 애니메이션 대상 요소들
+            const animated = document.querySelectorAll(
+                '.header, .hotel-section, .actions-row, .status-bar'
+            )
+
+            animated.forEach(el => {
+                el.style.animation = 'none' // 기존 CSS 애니메이션 끄기
+                el.style.opacity = '0' // 투명도 0으로 만들어 애니메이션 시작 전 초기 상태로
+
+                // reflow 강제 발생 (애니메이션 리셋을 위해 필요)
+                el.offsetHeight
+
+                el.style.animation = '' // CSS fadeUp 살리기
+                el.style.opacity = '' // CSS opacity 살리기
+            })
+        }
+    })
+
+    /* 페이지 로딩 시, 웨이크워드 감지 시작 */
+    window.addEventListener('load', function () {
+        springAi.wake.start();
+    });
+
+    const btnCheckin = document.querySelector('.btn-left')
+    const btnReservation = document.querySelector('.btn-right')
+
+    if (btnCheckin) {
+        btnCheckin.addEventListener('click', function (e) {
+            setTimeout(() => {
+                window.location.href = '/JHotel/checkin'; // 체크인으로 이동
+            }, 300)
+        })
+    }
+
+    if (btnReservation) {
+        btnReservation.addEventListener('click', function () {
+            setTimeout(() => {
+                window.location.href = '/JHotel/reservation'; // 예약하기로 이동
+            }, 300)
+        })
+    }
+
+    /* 다국어 데이터 정의 (선택) */
+    const strings = {
+        ko: {
+            checkin: '체크인',
+            reserve: '예약하기',
+            reserveSub: '현장 예약 / 숙박 연장',
+            status: '원하시는 서비스를 선택해 주세요',
+        },
+        en: {
+            checkin: 'Check-In',
+            reserve: 'Reservation',
+            reserveSub: 'Walk-in / Stay Extension',
+            status: 'Please select a service',
+        }
+    };
+
+    /* 언어 변경 함수 */
+    function setLang(btn, lang) {
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const s = strings[lang];
+        document.getElementById('btn-checkin-title').textContent = s.checkin;
+        document.getElementById('btn-reserve-title').textContent = s.reserve;
+        document.getElementById('btn-reserve-sub').textContent = s.reserveSub;
+        document.getElementById('status-text').textContent = s.status;
+    }
+</script>
+</body>
+</html>

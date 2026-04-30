@@ -1,0 +1,514 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Kiosk - 호텔 안내</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" th:href="@{/css/customer/kiosk.css}"> <!-- 공통 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/header_main.css}"> <!-- 메인 헤더 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/top_title.css}"> <!-- 최상단 타이틀 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/modal.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/numKeyboard.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/korKeyboard.css}">
+
+    <!-- flatpickr 라이브러리 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+
+    <style>
+        .kiosk {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+        }
+
+        .center-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3cqw;
+            overflow: hidden;
+        }
+
+        .page-title-bar {
+            margin: 0;
+            width: 100%;
+            padding: 0 5cqw;
+        }
+
+        .content-area {
+            margin: 0;
+            width: 90%;
+            overflow-y: auto;
+            scrollbar-width: none;
+            display: flex;
+            flex-direction: column;
+            gap: 3cqw;
+            animation: fadeUp 0.4s ease both 0.25s;
+            opacity: 0;
+        }
+
+        .content-area::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* ── 입력 카드 ── */
+        .input-card {
+            background: var(--surface);
+            border-radius: 2cqw;
+            border: 1px solid var(--border);
+            box-shadow: 0 0.5cqw 2.5cqw var(--shadow);
+            padding: 3cqw 3.5cqw;
+            display: flex;
+            flex-direction: column;
+            gap: 2cqw;
+            flex-shrink: 0;
+        }
+
+        .input-label {
+            font-size: 3.2cqw;
+            font-weight: 500;
+            color: var(--text);
+            letter-spacing: 0.02em;
+        }
+
+        .input-field {
+            width: 100%;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 3cqw;
+            font-weight: 400;
+            color: var(--text);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 1.2cqw;
+            padding: 2.5cqw 3cqw;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+
+        .input-field::placeholder {
+            color: #bbb;
+        }
+
+        .birth-input-wrap {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 1cqw;
+        }
+
+        .birth-input-wrap span {
+            font-size: 3cqw;
+            color: var(--text);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        #guestBirthYear,
+        #guestBirthMonth,
+        #guestBirthDay {
+            flex: 1;      /* 월/일은 좁게 */
+            min-width: 0;
+            text-align: center;
+            padding: 2.5cqw 1cqw;
+        }
+
+        .input-field:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 0.4cqw rgba(30, 77, 58, 0.1);
+            background: var(--surface);
+        }
+
+        .phone-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 1cqw;
+        }
+
+        .phone-prefix, .phone-dash {
+            font-size: 3cqw;
+            color: var(--text);
+            white-space: nowrap;
+        }
+
+        .phone-middle, .phone-last {
+            flex: 1;
+            text-align: center;
+        }
+
+        .privacy-card {
+            flex-direction: row;
+            align-items: center;
+            gap: 2cqw;
+        }
+
+        .privacy-checkbox {
+            width: 3cqw;
+            height: 3cqw;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .privacy-label {
+            font-size: 2.8cqw;
+            color: var(--text);
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .btn-privacy {
+            font-size: 2.4cqw;
+            color: var(--text-sub);
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 0.8cqw;
+            padding: 0.8cqw 1.5cqw;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-left: auto;
+        }
+
+        .btn-privacy:hover {
+            background: var(--bg);
+        }
+
+        .privacy-modal-box {
+            max-height: 70cqw;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .privacy-modal-title {
+            font-size: 3.5cqw;
+            font-weight: 600;
+            margin-bottom: 2cqw;
+        }
+
+        .privacy-modal-content {
+            font-size: 2.7cqw;
+            color: var(--text-sub);
+            line-height: 1.8;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* ── 하단 고정 ── */
+        .footer {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 2.5cqw 4cqw 3.5cqw;
+            display: flex;
+            flex-direction: column;
+            gap: 1.8cqw;
+            animation: fadeUp 0.4s ease both 0.35s;
+            opacity: 0;
+        }
+
+        .footer-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2cqw;
+        }
+
+        .btn-prev {
+            font-size: 3.5cqw;
+            font-weight: 500;
+            color: #fff;
+            background: #2e2e2e;
+            border: none;
+            border-radius: 1.8cqw;
+            padding: 3cqw;
+            cursor: pointer;
+            box-shadow: 0 0.5cqw 2cqw rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .btn-prev:hover {
+            background: #1a1a1a;
+        }
+
+        .btn-prev:active {
+            transform: scale(0.99);
+        }
+
+        .btn-direct-reserve {
+            font-size: 3.5cqw;
+            font-weight: 500;
+            color: #fff;
+            background: var(--red);
+            border: none;
+            border-radius: 1.8cqw;
+            padding: 3cqw;
+            cursor: pointer;
+            letter-spacing: 0.04em;
+            box-shadow: 0 0.5cqw 2cqw rgba(192, 57, 43, 0.35);
+            transition: all 0.2s ease;
+        }
+
+        .btn-direct-reserve:hover {
+            background: var(--red-dark);
+        }
+
+        .btn-direct-reserve:active {
+            transform: scale(0.99);
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(2cqw);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+</head>
+<body>
+
+<div class="kiosk">
+
+    <!-- 상단 네비 -->
+    <div class="header">
+        <div class="header-left">
+            <button class="btn-home" onclick="goHome()">홈</button>
+            <div class="tab-bar">
+                <button class="tab active">호텔 안내</button>
+            </div>
+        </div>
+
+        <button class="btn-back" onclick="goBack()">
+            <svg class="back-icon" viewBox="0 0 24 24">
+                <path d="M11.67 3.87L9.9 2.1 0 12l9.9 9.9 1.77-1.77L3.54 12z"/>
+            </svg>
+        </button>
+    </div>
+
+    <div class="center-block">
+        <!-- 페이지 타이틀 바 -->
+        <div class="page-title-bar">
+            <div class="page-title-ko">예약자 정보 확인</div>
+            <div class="page-title-en">CHECK RESERVATION INFORMATION</div>
+        </div>
+
+        <div class="content-area">
+            <!-- 예약자 명 -->
+            <div class="input-card">
+                <span class="input-label">예약자 명</span>
+                <input class="input-field" id="guestName"
+                       type="text" placeholder="홍길동" maxlength="20" data-hangul/>
+            </div>
+
+            <!-- 예약자 연락처 -->
+            <div class="input-card">
+                <span class="input-label">연락처</span>
+                <div class="phone-input-wrap">
+                    <span class="phone-prefix">010 - </span>
+                    <input class="input-field phone-middle" id="phoneMiddle"
+                           type="tel" placeholder="0000" maxlength="4"
+                           data-numpad data-numpad-next="phoneLast">
+                    <span class="phone-dash"> - </span>
+                    <input class="input-field phone-last" id="phoneLast"
+                           type="tel" placeholder="0000" maxlength="4"
+                           data-numpad>
+                </div>
+            </div>
+
+            <!-- 예약자 생년월일 -->
+            <div class="input-card">
+                <span class="input-label">예약자 생년월일</span>
+                <div class="birth-input-wrap" id="guestBirth">
+                    <input class="input-field" id="guestBirthYear"
+                           type="text" placeholder="YYYY" maxlength="4"
+                           data-numpad data-numpad-next="guestBirthMonth"/>
+                    <span>년</span>
+
+                    <input class="input-field" id="guestBirthMonth"
+                           type="text" placeholder="MM" maxlength="2"
+                           data-numpad data-numpad-next="guestBirthDay"/>
+                    <span>월</span>
+
+                    <input class="input-field" id="guestBirthDay"
+                           type="text" placeholder="DD" maxlength="2"
+                           data-numpad/>
+                    <span>일</span>
+                </div>
+            </div>
+
+            <div class="input-card privacy-card">
+                <input type="checkbox" id="privacyAgree" class="privacy-checkbox">
+                <label for="privacyAgree" class="privacy-label">
+                    개인정보 수집 및 이용에 동의합니다.
+                </label>
+                <button class="btn-privacy" onclick="openModal('privacyModal')">전문 보기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 하단 고정 -->
+    <div class="footer">
+        <div class="footer-btns">
+            <button class="btn-prev" onclick="goBack()">이전으로</button>
+            <button class="btn-direct-reserve" onclick="directReserve()">바로 예약</button>
+        </div>
+    </div>
+
+    <!-- 터치 키보드 -->
+    <div id="hangul-kb" style="display:none; position:fixed; bottom:0; width:100%; z-index:999;">
+        <div class="hangul-kb-container"></div>
+    </div>
+    <div id="num-kb" style="display:none; position:fixed; bottom:0; width:100%; z-index:999;">
+        <div class="num-kb-container"></div>
+    </div>
+
+    <!-- 알림 모달 -->
+    <div class="modal-overlay hidden" id="checkModal">
+        <div class="modal-box">
+            <span class="modal-msg" style="white-space: pre-line;">모든 정보를 필수로 입력해 주세요.</span>
+            <div class="modal-btns" style="grid-template-columns: 1fr;">
+                <button class="btn-modal-yes" onclick="closeModal('checkModal')">확 인</button>
+                <!--// -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 생년월일 입력값 확인 모달 -->
+    <div class="modal-overlay hidden" id="checkBirth">
+        <div class="modal-box">
+            <span class="modal-msg" style="white-space: pre-line;">생년월일을 알맞은 형식으로 입력해 주세요.</span>
+            <div class="modal-btns" style="grid-template-columns: 1fr;">
+                <button class="btn-modal-yes" onclick="closeModal('checkBirth')">확 인</button>
+                <!--// -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 타임아웃 모달 -->
+    <div class="modal-overlay hidden" id="timeoutModal">
+        <div class="modal-box">
+            <p><span id="timeoutSec">10</span>초 후<br>메인 화면으로 돌아갑니다.</p>
+            <div class="modal-sub-msg">
+                계속 진행하시려면 화면을 클릭해 주세요.
+            </div>
+        </div>
+    </div>
+
+    <!-- 개인정보 수집 동의 전문 -->
+    <div class="modal-overlay hidden" id="privacyModal">
+        <div class="modal-box privacy-modal-box">
+            <div class="privacy-modal-title">개인정보 수집 및 이용 동의</div>
+            <div class="privacy-modal-content">
+                <b>개인정보 보호법 제15조, 제22조 및 관련 법령</b>에 따라 <br>귀하의 개인정보를 수집ㆍ이용하고자 하며, 이에 대한 동의를 받고자 합니다.<br><br>
+                1. 수집 항목: <b>성명, 연락처, 생년월일</b><br>
+                2. 수집 목적: <b>J 호텔 예약 서비스 제공 및 본인 확인</b><br>
+                3. 보유 기간: <b>예약 종료 후 1년</b><br><br>
+                위 개인정보 수집·이용에 동의하지 않으실 수 있으나,
+                동의하지 않으실 경우 예약 서비스 이용이 제한될 수 있습니다.
+            </div>
+            <div class="modal-btns" style="grid-template-columns: 1fr;">
+                <button class="btn-modal-yes" onclick="closeModal('privacyModal')">확 인</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/customer/header.js}"></script>
+<script th:src="@{/js/customer/modal.js}"></script>
+<script th:src="@{/js/customer/numKeyboard.js}"></script>
+<script th:src="@{/js/customer/korKeyboard.js}"></script>
+<script src="https://unpkg.com/hangul-js"></script>
+<script th:src="@{/js/customer/timeout.js}"></script>
+
+<script>
+    /* 뒤로가기로 접근(BFCache 복원)시, 애니메이션 효과 재실행 */
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) {
+            const animated = document.querySelectorAll(
+                '.content-area, .footer'
+            )
+
+            animated.forEach(el => {
+                el.style.animation = 'none'
+                el.style.opacity = '0'
+
+                el.offsetHeight
+
+                el.style.animation = ''
+                el.style.opacity = ''
+            })
+        }
+    })
+
+    /* 이전 선택 정보 초기화 (세션에 저장된 정보 모두 초기화) */
+    sessionStorage.removeItem('guestInfo')
+
+    /* 연락처 입력 */
+    function handlePhone(input) {
+        input.value = input.value.replace(/[^0-9]/g, '');
+    }
+
+    function directReserve() {
+        const guestName = document.getElementById('guestName').value.trim()
+        const phoneMiddle = document.getElementById('phoneMiddle').value || ''
+        const phoneLast = document.getElementById('phoneLast').value
+        const birthYear = document.getElementById('guestBirthYear').value
+        const birthMonth = document.getElementById('guestBirthMonth').value
+        const birthDay = document.getElementById('guestBirthDay').value
+        const privacyAgree = document.getElementById('privacyAgree').checked
+
+        // 필수 입력값 공란 확인
+        if (!guestName || phoneMiddle.length !== 4 || phoneLast.length !== 4 || !birthYear || !birthMonth || !birthDay) {
+            openModal('checkModal')
+            return
+        }
+
+        // 개인정보 수집 동의라나 체크 확인
+        if (!privacyAgree) {
+            openModal('checkModal')
+            document.querySelector('.modal-msg').textContent = '개인정보 수집 동의란에 체크해주세요.'
+            return
+        }
+
+        // 생년월일 입력 형식 값 확인
+        const year = parseInt(birthYear);
+        const month = parseInt(birthMonth);
+        const day = parseInt(birthDay);
+        const currentYear = new Date().getFullYear();
+
+        // 1) 연도 4자리 확인 & 미래 여부 확인 & 월 범위(1~12) 확인
+        if (birthYear.length !== 4 || year > currentYear || year < 1900 || month < 1 || month > 12) {
+            openModal('checkBirth');
+            return;
+        }
+
+        // 2) 입력값과 변한값 비교해 유효한 날짜인지 검사
+        const dateCheck = new Date(year, month - 1, day);
+        if (dateCheck.getFullYear() !== year ||
+            dateCheck.getMonth() !== month - 1 ||
+            dateCheck.getDate() !== day) {
+            openModal('checkBirth');
+            return;
+        }
+
+        const birth = birthYear + '-' + String(birthMonth).padStart(2, '0') + '-' + String(birthDay).padStart(2, '0')
+        const guestPhone = '010' + phoneMiddle + phoneLast;
+
+        const guestInfo = ({
+            guestName: guestName,
+            guestPhone: guestPhone,
+            guestBirth: birth
+        })
+
+        sessionStorage.setItem('guestInfo', JSON.stringify(guestInfo))
+
+        window.location.href = '/JHotel/onsite/final_check';
+    }
+</script>
+</body>
+</html>

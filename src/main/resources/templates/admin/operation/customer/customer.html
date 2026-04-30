@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout/layout :: page(title='고객 정보', content=~{::main}, pageScript=~{::script})}">
+<head></head>
+<meta name="_csrf" th:content="${_csrf.token}" />
+<meta name="_csrf_header" th:content="${_csrf.headerName}" />
+<body>
+<main>
+
+  <div class="toolbar">
+    <div class="search-wrap" style="max-width:400px">
+      <span class="ico">🔍</span>
+      <input type="text" id="cust-keyword" placeholder="고객명 / 연락처 검색"
+             th:value="${param.keyword}">
+    </div>
+    <button class="btn btn-primary" onclick="customer.search()">검색</button>
+  </div>
+
+  <div class="dash-grid">
+
+    <!-- 고객 목록 -->
+    <div class="card" style="overflow:hidden">
+      <div class="card-head"><span class="card-title">고객 목록</span></div>
+      <div class="tbl-wrap" style="max-height:520px;overflow-y:auto">
+        <table class="tbl">
+          <thead><tr><th>고객명</th><th>연락처</th><th>예약</th></tr></thead>
+          <tbody id="tbody-customers">
+          <tr th:each="c, stat : ${customers.dtoList}"
+              th:classappend="${stat.first} ? 'row-selected'"
+              th:onclick="'selectRow(this);customer.loadDetail(\'' + ${c.memberNo} + '\')'"
+              th:data-id="${c.memberNo}">
+            <td th:text="${c.memberName}">최지훈</td>
+            <td th:text="${#strings.length(c.memberPhone) == 11}
+    ? ${c.memberPhone.substring(0,3) + '-' + c.memberPhone.substring(3,7) + '-' + c.memberPhone.substring(7)}
+    : ${c.memberPhone}">
+            </td>
+            <td th:text="${c.reservationCount} + '회'">6회</td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(customers)}">
+            <td colspan="3" style="text-align:center;padding:20px;color:var(--c-txt-3)">검색 결과 없음</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 고객 상세 (서버 최초 렌더 / 이후 AJAX 갱신) -->
+    <div class="card">
+      <div class="card-head"><span class="card-title">고객 상세 정보</span></div>
+      <div class="card-body">
+        <div class="detail-kv mt-8">
+          <div class="kv-row"><span class="kv-key">고객명</span>
+            <span class="kv-val fw700" id="cust-name"></span></div>
+          <div class="kv-row"><span class="kv-key">연락처</span>
+            <span class="kv-val" id="cust-phone"></span></div>
+          <div class="kv-row"><span class="kv-key">생년월일</span>
+            <span class="kv-val" id="cust-birth"></span></div>
+          <div class="kv-row"><span class="kv-key">누적 예약</span>
+            <span class="kv-val fw700" id="cust-cnt"></span></div>
+          <div class="kv-row"><span class="kv-key">누적 결제</span>
+            <span class="kv-val fw700" id="cust-pay"></span></div>
+          <div class="kv-row"><span class="kv-key">누적 포인트</span>
+            <span class="kv-val" id="cust-point"></span></div>
+          <div class="kv-row"><span class="kv-key">최근 방문</span>
+            <span class="kv-val" id="cust-visit"></span></div>
+        </div>
+        <div id="cust-detail-empty" style="text-align:center;padding:40px 0;color:var(--c-txt-3);font-size:13px">
+          고객을 선택하면 상세 정보가 표시됩니다.
+        </div>
+        <!-- AJAX 갱신 영역 (id 만 선언, JS 가 채움) -->
+        <div id="cust-name"    class="kv-val fw700"  style="display:none"></div>
+        <div id="cust-phone"   class="kv-val"        style="display:none"></div>
+        <div id="cust-birth"   class="kv-val"        style="display:none"></div>
+        <div id="cust-cnt"     class="kv-val fw700"  style="display:none;color:var(--c-blue)"></div>
+        <div id="cust-pay"     class="kv-val fw700"  style="display:none"></div>
+        <div id="cust-point"   class="kv-val"        style="display:none"></div>
+        <div id="cust-visit"   class="kv-val"        style="display:none"></div>
+      </div>
+    </div>
+
+  </div>
+  <div class="pagination">
+    <a th:if="${customers.prev}"
+       th:href="@{/admin/reservation(page=${customers.start - 1})}">이전</a>
+
+    <span th:each="i : ${#numbers.sequence(customers.start, customers.end)}">
+        <a href="javascript:void(0)"
+           th:attr="onclick=|movePage(${i})|"
+           th:text="${i}"
+           th:classappend="${i == customers.page} ? 'active' : ''"></a>
+    </span>
+
+    <a th:if="${customers.next}"
+       th:href="@{/admin/customer(page=${customers.end + 1})}">다음</a>
+  </div>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,335 @@
+/* ══════════════════════════════════════════════
+   modal.css  |  오버레이 · 모달 · 알림창
+   디자인 기준: 무인 호텔 키오스크 관리자 와이어프레임
+══════════════════════════════════════════════ */
+
+/* ── 오버레이 ── */
+.overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0, 0, 0, .40);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.overlay.open {
+    display: flex;
+    animation: overlayIn .15s ease;
+}
+
+@keyframes overlayIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* ── 모달 공통 ── */
+.modal {
+    background: var(--c-surface);
+    border-radius: var(--r-lg);
+    box-shadow: var(--sh-modal);
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+    animation: modalIn .18s ease both;
+}
+
+.modal::-webkit-scrollbar {
+    display: none;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: scale(.96) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-sm {
+    max-width: 360px;
+}
+
+.modal-md {
+    max-width: 500px;
+}
+
+.modal-lg {
+    max-width: 660px;
+}
+
+/* ── 모달 헤더 ── */
+.modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid var(--c-border);
+    position: sticky;
+    top: 0;
+    background: var(--c-surface);
+    z-index: 1;
+}
+
+.modal-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--c-txt-1);
+}
+
+.modal-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    font-size: 16px;
+    line-height: 1;
+    color: var(--c-txt-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--t);
+    cursor: pointer;
+}
+
+.modal-close:hover {
+    background: var(--c-surface-2);
+    color: var(--c-txt-1);
+}
+
+.modal-body {
+    padding: 18px 22px;
+}
+
+.modal-foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 22px 18px;
+    border-top: 1px solid var(--c-border);
+}
+
+/* ── 알림형 모달 (확인 다이얼로그) ── */
+.modal-alert .modal-body {
+    text-align: center;
+    padding: 36px 22px 22px;
+}
+
+.alert-ico {
+    font-size: 40px;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.alert-msg {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--c-txt-1);
+    margin-bottom: 6px;
+}
+
+.alert-sub {
+    font-size: 12.5px;
+    color: var(--c-txt-2);
+    line-height: 1.6;
+}
+
+/* 와이어프레임 스타일: 빨간 텍스트 알림 모달 */
+.modal-alert-simple {
+    background: #fff;
+    border-radius: var(--r-lg);
+    box-shadow: var(--sh-modal);
+    width: 100%;
+    max-width: 400px;
+    padding: 52px 40px 40px;
+    text-align: center;
+    animation: modalIn .18s ease both;
+}
+
+.alert-simple-msg {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--c-red);
+    line-height: 1.55;
+    margin-bottom: 32px;
+    letter-spacing: .01em;
+}
+
+.alert-simple-btn {
+    display: inline-block;
+    width: 140px;
+    padding: 12px;
+    background: #2B2B2B;
+    color: #fff;
+    border: none;
+    border-radius: var(--r-sm);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    cursor: pointer;
+    transition: background .15s;
+}
+
+.alert-simple-btn:hover {
+    background: #444444;
+}
+
+/* ── 환불 요약 ── */
+.refund-summary {
+    background: var(--c-surface-2);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    padding: 12px 14px;
+    margin-bottom: 16px;
+}
+
+.rs-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 13px;
+}
+
+.rs-row .rl {
+    color: var(--c-txt-2);
+}
+
+.rs-row .rv {
+    font-weight: 600;
+}
+
+.rs-divider {
+    border: none;
+    border-top: 1px solid var(--c-border);
+    margin: 7px 0;
+}
+
+.rs-total .rl {
+    font-weight: 700;
+}
+
+.rs-total .rv {
+    font-size: 15px;
+    color: var(--c-red);
+    font-weight: 700;
+}
+
+/* ── 재고 편집 모달 ── */
+#modal-inv-edit .modal-body input {
+    height: 40px;
+    padding: 0 10px;
+    border: 1.5px solid var(--c-border);
+    border-radius: var(--r-sm);
+    font-size: 13px;
+    color: var(--c-txt-1);
+    background: var(--c-surface);
+    transition: all var(--t);
+}
+
+#modal-inv-edit .modal-body input:focus {
+    outline: none;
+    border-color: var(--c-accent);
+    box-shadow: 0 0 0 2px rgba(85, 85, 85, .12);
+}
+
+#modal-inv-edit .modal-body input::placeholder {
+    color: var(--c-txt-3);
+    font-size: 12.5px;
+}
+
+#modal-inv-edit .modal-foot button {
+    min-width: 85px;
+    height: 36px;
+    border-radius: var(--r-sm);
+    border: none;
+    background: #2B2B2B;
+    color: #fff;
+    font-weight: 600;
+    transition: all var(--t);
+}
+
+#modal-inv-edit .modal-foot button:hover {
+    background: #3A3A3A;
+}
+
+#modal-inv-edit .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#modal-inv-edit .form-row label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--c-txt-2);
+}
+
+/* ── 폼 그리드 기본 ── */
+.form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.form-row label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--c-txt-2);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px 16px;
+}
+
+/* 5컬럼 (상세 모달용) */
+.form-grid.col5 {
+    grid-template-columns: repeat(5, 1fr);
+}
+
+/* 각 항목 */
+.form-grid > div {
+    display: flex;
+    flex-direction: column;
+}
+
+/* label */
+.form-grid .lbl {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--c-txt-2);
+}
+
+/* input / select */
+.form-grid input,
+.form-grid select {
+    height: 36px;
+    padding: 0 10px;
+    border: 1.5px solid var(--c-border);
+    border-radius: var(--r-sm);
+    font-size: 13px;
+    color: var(--c-txt-1);
+    background: var(--c-surface);
+    /*margin-top: 4px;*/
+}
+
+/* focus */
+.form-grid input:focus,
+.form-grid select:focus {
+    outline: none;
+    border-color: var(--c-accent);
+    box-shadow: 0 0 0 2px rgba(85, 85, 85, .12);
+}

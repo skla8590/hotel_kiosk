@@ -1,0 +1,121 @@
+<!-- 영수증 모달 -->
+<div class="modal-overlay hidden" id="receiptModal">
+    <div class="receipt-modal">
+
+        <!-- 타이머 바 -->
+        <div class="receipt-timer-bar">
+            <span class="timer-label">영수증 출력 · <span id="timerSec">10</span>초 후 자동 종료</span>
+            <span class="timer-count" id="timerCount">10</span>
+        </div>
+        <div class="timer-progress-wrap">
+            <div class="timer-progress" id="timerBar"></div>
+        </div>
+
+        <!-- 영수증 본문 -->
+        <div class="receipt-body">
+
+            <div class="receipt-title">영수증</div>
+
+            <!-- 메타 -->
+            <div class="receipt-meta">
+                <div class="receipt-meta-row">
+                    <span class="receipt-meta-key">영수증 번호</span>
+                    <span class="receipt-meta-val">RCP-2026-031204</span>
+                </div>
+                <div class="receipt-meta-row">
+                    <span class="receipt-meta-key">발행 일시</span>
+                    <span class="receipt-meta-val">2026 년 03 월 12 일 &nbsp;14:32</span>
+                </div>
+            </div>
+
+            <!-- 이용 내역 -->
+            <span class="receipt-section-label">이용 내역</span>
+            <div class="receipt-items">
+                <div class="receipt-item">
+                    <span class="item-name">객실 요금 (디럭스 더블룸 × 2 박)</span>
+                    <span class="item-price">380,000 원</span>
+                </div>
+                <div class="receipt-item">
+                    <span class="item-name">조식 뷔페 (2 인 × 2 일)</span>
+                    <span class="item-price">96,000 원</span>
+                </div>
+                <div class="receipt-item">
+                    <span class="item-name">룸서비스 - 와인 &amp; 치즈 플래터</span>
+                    <span class="item-price">54,000 원</span>
+                </div>
+                <div class="receipt-item">
+                    <span class="item-name">스파 이용료</span>
+                    <span class="item-price">80,000 원</span>
+                </div>
+                <div class="receipt-item">
+                    <span class="item-name">미니바 이용</span>
+                    <span class="item-price">18,500 원</span>
+                </div>
+                <div class="receipt-item">
+                    <span class="item-name discount">↳ 멤버십 할인 (골드등급 10%)</span>
+                    <span class="item-price discount">-38,000 원</span>
+                </div>
+            </div>
+
+            <!-- 소계 박스 -->
+            <div class="receipt-summary">
+                <div class="summary-row">
+                    <span class="summary-key">소계</span>
+                    <span class="summary-val">628,500 원</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-key">할인 합계</span>
+                    <span class="summary-val discount">-38,000 원</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-key">공급가액</span>
+                    <span class="summary-val">536,818 원</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-key">부가세 (VAT 10%)</span>
+                    <span class="summary-val">53,682 원</span>
+                </div>
+            </div>
+
+            <!-- 합계 -->
+            <div class="receipt-total">
+                <span class="total-label">합 계</span>
+                <span class="total-value">₩ 590,500</span>
+            </div>
+
+            <!-- 결제 정보 -->
+            <span class="receipt-section-label">결제 정보</span>
+            <div class="receipt-payment">
+                <div class="payment-method-label">+ &nbsp;신용카드 결제</div>
+                <div class="payment-row">
+                    <span class="payment-key">카드사</span>
+                    <span class="payment-val">신한카드 (****7842)</span>
+                </div>
+                <div class="payment-row">
+                    <span class="payment-key">승인 번호</span>
+                    <span class="payment-val">81923746</span>
+                </div>
+                <div class="payment-row">
+                    <span class="payment-key">결제 일시</span>
+                    <span class="payment-val">2026.03.12 &nbsp;11:28</span>
+                </div>
+            </div>
+
+            <!-- 호텔 푸터 -->
+            <div class="receipt-footer">
+                <div class="receipt-divider-gold"></div>
+                <div class="hotel-name-receipt">GRAND AURORA HOTEL</div>
+                <div class="hotel-addr">
+                    서울특별시 강남구 테헤란로 521<br>
+                    TEL. 02-1234-5678 &nbsp;|&nbsp; www.grandaurora.co.kr
+                </div>
+                <div class="hotel-thanks">이용해 주셔서 감사합니다.</div>
+            </div>
+
+        </div><!-- /receipt-body -->
+
+        <!-- 닫기 버튼 -->
+        <button class="receipt-close-btn" onclick="closeModal()">닫기</button>
+
+    </div><!-- /receipt-modal -->
+</div><!-- /modal-overlay -->

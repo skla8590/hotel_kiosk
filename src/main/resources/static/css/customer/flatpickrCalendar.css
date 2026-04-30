@@ -1,0 +1,53 @@
+/* 달력 오버레이 (room_selection 숨김 처리용) */
+#calendarOverlay {
+    display: none;
+    position: absolute;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    background: var(--surface);
+    box-shadow: 0 2cqw 5cqw var(--shadow);
+}
+
+/* 달력 컨테이너 중앙 정렬 */
+#kiosk-calendar-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+/* flatpickr 기본 너비 제한 해제 */
+.flatpickr-calendar.inline {
+    width: 100% !important;
+    max-width: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+/* 날짜 그리드 너비 조정 */
+.flatpickr-innerContainer,
+.flatpickr-rContainer,
+.flatpickr-days,
+.dayContainer {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+}
+
+/* 날짜 칸 비율 조정 */
+.flatpickr-day {
+    flex-basis: 14.28% !important;
+    max-width: none !important;
+    height: 8.5cqw !important;
+    line-height: 10cqw !important;
+    font-size: 3.5cqw !important;
+    border-radius: 1.5cqw !important;
+    margin: 0.5cqw 0 !important;
+}
+
+/* 요일 표시(일~토) 너비 조정 */
+.flatpickr-weekday {
+    flex: 1 !important;
+    font-size: 2.5cqw !important;
+}

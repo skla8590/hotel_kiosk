@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml"
+      th:replace="~{admin/layout/layout :: page(title='재고 관리', content=~{::main}, pageScript=~{::script})}">
+<head></head>
+<body>
+<main>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="ico">🔍</span>
+      <input type="text" id="search-keyword" placeholder="품목명 검색">
+    </div>
+
+    <select id="search-status" class="flt-select">
+      <option value="">전체</option>
+      <option value="WARNING">부족</option>
+      <option value="NORMAL">정상</option>
+    </select>
+    <button class="btn btn-primary" onclick="stock.search()">검색</button>
+
+    <!--<button class="btn btn-gold ml-auto" onclick="openModal('modal-inv-reg')">+ 품목 등록</button>-->
+  </div>
+
+  <div class="dash-grid" style="grid-template-columns:1fr 500px">
+
+    <!-- 리스트 -->
+    <div class="inv-list" id="inv-list">
+
+      <div th:each="item : ${inventoryList}" class="inv-item">
+
+        <div class="inv-ico">📦</div>
+
+        <div class="inv-info">
+          <div class="inv-name"
+               th:text="${item.stockName != null ? item.stockName : '이름 없음'}">수건</div>
+
+          <!--          <div class="inv-loc"
+                         th:text="${item.location != null ? item.location : '위치 없음'}">1층 창고</div>-->
+        </div>
+
+        <div class="inv-bar-col">
+          <div class="inv-bar-labels">
+            <span th:text="${item.stockCount != null ? item.stockCount : 0} + '개'">0개</span>
+            <span th:text="'최소 ' + ${item.minStock != null ? item.minStock : 0} + '개'">최소 0개</span>
+          </div>
+
+          <div class="inv-bar-bg">
+            <div class="inv-bar-fill"
+                 th:with="pct=${(item.minStock != null and item.minStock > 0) ? ((item.stockCount ?: 0) * 100.0 / item.minStock) : 0}"
+                 th:style="'width:' + ${pct > 100 ? 100 : pct} + '%; background:' +
+                 (${item.stockStatus == 'Warning'} ? 'var(--c-red)' :
+                  (${item.stockStatus == 'Shortage'} ? 'var(--c-yellow)' : 'var(--c-green)'))">
+            </div>
+          </div>
+        </div>
+
+        <div class="inv-qty">
+          <span th:style="'color:' + (${item.stockStatus == 'Warning'} ? 'red' : (${item.stockStatus == 'Shortage'} ? 'orange' : 'green'))"
+                th:text="(${item.stockCount != null ? item.stockCount : 0}) + ' / ' + (${item.minStock != null ? item.minStock : 0})"></span><br>
+
+          <span class="badge"
+                th:classappend="${item.stockStatus == 'Warning'} ? 'badge-red' :
+                               (${item.stockStatus == 'Shortage'} ? 'badge-yellow' : 'badge-green')"
+                th:text="${item.stockStatus == 'Warning'} ? '부족' :
+                       (${item.stockStatus == 'Shortage'} ? '경고' : '정상')">정상</span>
+        </div>
+
+        <div class="inv-actions">
+          <button class="btn btn-ghost btn-sm"
+                  th:data-id="${item.stockId}"
+                  th:data-name="${item.stockName}"
+                  th:data-qty="${item.stockCount}"
+                  th:data-min="${item.minStock}"
+                  onclick="stock.openEditFromBtn(this)">
+            수정
+          </button>
+        </div>
+
+      </div>
+
+      <div th:if="${#lists.isEmpty(inventoryList)}"
+           style="text-align:center;padding:40px;color:var(--c-txt-3)">
+        재고 항목이 없습니다.
+      </div>
+
+    </div>
+
+    <!-- 등록 -->
+    <div class="card" sec:authorize="hasRole('SUPER')">
+      <div class="card-head"><span class="card-title">재고 등록</span></div>
+
+      <div class="card-body">
+          <div class="form-row">
+            <label for="inv-name">품목명</label>
+            <input class="inp" id="inv-name">
+          </div>
+
+          <div class="form-row">
+            <label for="inv-qty">수량</label>
+            <input class="inp" id="inv-qty" type="number">
+          </div>
+
+          <div class="form-row">
+            <label for="inv-min">최소 수량</label>
+            <input class="inp" id="inv-min" type="number">
+          </div>
+
+          <button class="btn btn-gold" onclick="stock.register()">등록</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 수정 모달 -->
+  <div class="overlay" id="modal-inv-edit">
+    <div class="modal modal-sm">
+      <div class="modal-head">
+        <span>재고 수정</span>
+        <button onclick="closeModal('modal-inv-edit')">×</button>
+      </div>
+
+      <div class="modal-body">
+
+        <input type="hidden" id="inv-edit-id">
+
+        <div class="form-row">
+          <label for="inv-edit-title">품목명</label>
+          <input id="inv-edit-title" placeholder="품목명 입력" th:attr="readonly=${!#authorization.expression('hasRole(''SUPER'')')}">
+        </div>
+
+        <div class="form-row">
+          <label for="inv-edit-qty">수량</label>
+          <input type="number" id="inv-edit-qty" placeholder="재고 수량 입력">
+        </div>
+
+        <div class="form-row">
+          <label for="inv-edit-min">최소 수량</label>
+          <input type="number" id="inv-edit-min" placeholder="최소 수량 입력" th:attr="readonly=${!#authorization.expression('hasRole(''SUPER'')')}">
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn btn-primary" onclick="stock.update()">저장</button>
+      </div>
+    </div>
+  </div>
+
+
+
+</main>
+</body>
+</html>

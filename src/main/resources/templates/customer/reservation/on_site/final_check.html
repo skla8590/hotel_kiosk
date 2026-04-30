@@ -1,0 +1,498 @@
+﻿<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Hotel Kiosk - 호텔 안내</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" th:href="@{/css/customer/kiosk.css}"> <!-- 공통 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/header_main.css}"> <!-- 메인 헤더 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/top_title.css}"> <!-- 최상단 타이틀 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/modal.css}">
+
+    <style>
+        .kiosk {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+        }
+
+        .center-block {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 3cqw 4cqw;
+            gap: 2.5cqw;
+            overflow-y: auto;
+            scrollbar-width: none;
+            animation: fadeUp 0.4s ease both 0.25s;
+            opacity: 0;
+        }
+
+        .page-title-bar {
+            margin: 0;
+        }
+
+        .center-block::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* ── 예약 정보 카드 ── */
+        .info-card {
+            background: var(--surface);
+            border-radius: 2cqw;
+            border: 1px solid var(--border);
+            box-shadow: 0 0.5cqw 2.5cqw var(--shadow);
+            padding: 3.5cqw 4cqw;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5cqw;
+        }
+
+        .info-section-title {
+            font-size: 3.4cqw;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: 0.02em;
+        }
+
+        .info-row {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2cqw;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .info-key {
+            font-size: 2.8cqw;
+            font-weight: 400;
+            color: var(--text-sub);
+        }
+
+        .info-val {
+            font-size: 2.8cqw;
+            font-weight: 500;
+            color: var(--text);
+            text-align: right;
+        }
+
+        /* 구분선 */
+        .divider {
+            height: 1px;
+            background: #f0f0f0;
+            margin: 0.5cqw 0;
+        }
+
+        /* 객실 목록 */
+        .room-list-row {
+            display: flex;
+            flex-direction: column;
+            gap: 2cqw;
+        }
+
+        /* 각 객실 블록 */
+        .room-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8cqw;
+            padding-bottom: 2cqw;
+            border-bottom: 1px dashed #e0e0e0;
+        }
+
+        .room-group:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        /* 객실 이름 스타일 (이미지처럼 좌측 정렬) */
+        .room-name {
+            font-size: 3.2cqw;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        /* 옵션 리스트 컨테이너 (들여쓰기) */
+        .option-list {
+            padding-left: 3cqw;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5cqw;
+        }
+
+        /* 옵션 개별 아이템 */
+        .option-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 2.6cqw;
+            color: var(--text-sub);
+        }
+
+        /* 옵션 이름 앞에 붙는 대시(-) 표시 */
+        .option-name::before {
+            content: "- ";
+        }
+
+        /* 금액 강조 */
+        .info-val.price {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3.4cqw;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .info-val.point {
+            font-size: 2.8cqw;
+            font-weight: 500;
+            color: var(--green);
+        }
+
+        /* ── 안내 바 ── */
+        .notice-bar {
+            background: #4a4a4a;
+            border-radius: 1.5cqw;
+            padding: 2.5cqw 3cqw;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8cqw;
+            flex-shrink: 0;
+        }
+
+        .notice-text {
+            font-size: 2.6cqw;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.6;
+            letter-spacing: 0.02em;
+        }
+
+        /* ── 하단 고정 ── */
+        .footer {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 2.5cqw 4cqw 3.5cqw;
+            display: flex;
+            flex-direction: column;
+            gap: 1.8cqw;
+            animation: fadeUp 0.4s ease both 0.35s;
+            opacity: 0;
+        }
+
+        .footer-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2cqw;
+        }
+
+        .btn-prev {
+            font-size: 3.5cqw;
+            font-weight: 500;
+            color: #fff;
+            background: #2e2e2e;
+            border: none;
+            border-radius: 1.8cqw;
+            padding: 3cqw;
+            cursor: pointer;
+            box-shadow: 0 0.5cqw 2cqw rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .btn-prev:hover {
+            background: #1a1a1a;
+        }
+
+        .btn-prev:active {
+            transform: scale(0.99);
+        }
+
+        .btn-direct-reserve {
+            font-size: 3.5cqw;
+            font-weight: 500;
+            color: #fff;
+            background: var(--red);
+            border: none;
+            border-radius: 1.8cqw;
+            padding: 3cqw;
+            cursor: pointer;
+            letter-spacing: 0.04em;
+            box-shadow: 0 0.5cqw 2cqw rgba(192, 57, 43, 0.35);
+            transition: all 0.2s ease;
+        }
+
+        .btn-direct-reserve:hover {
+            background: var(--red-dark);
+        }
+
+        .btn-direct-reserve:active {
+            transform: scale(0.99);
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(2cqw);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+</head>
+<body>
+
+<div class="kiosk">
+
+    <!-- 상단 네비 -->
+    <div class="header">
+        <div class="header-left">
+            <button class="btn-home" onclick="goHome()">홈</button>
+            <div class="tab-bar">
+                <button class="tab active">호텔 안내</button>
+            </div>
+        </div>
+
+        <button class="btn-back" onclick="goBack()">
+            <svg class="back-icon" viewBox="0 0 24 24">
+                <path d="M11.67 3.87L9.9 2.1 0 12l9.9 9.9 1.77-1.77L3.54 12z"/>
+            </svg>
+        </button>
+    </div>
+
+    <div class="center-block">
+        <!-- 페이지 타이틀 바 -->
+        <div class="page-title-bar">
+            <div class="page-title-ko">예약 정보 최종 확인</div>
+            <div class="page-title-en">CHECK RESERVATION INFORMATION</div>
+        </div>
+
+        <!-- 예약 정보 카드 -->
+        <div class="info-card">
+
+            <!-- 예약 정보 최종 확인 -->
+            <span class="info-section-title">예약 정보 최종 확인</span>
+
+            <div class="info-row">
+                <div class="info-item">
+                    <span class="info-key">예약자 명</span>
+                    <span class="info-val" id="infoName">홍길동</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-key">연락처</span>
+                    <span class="info-val" id="infoPhone">010-1234-5678</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-key">숙박 기간</span>
+                    <span class="info-val" id="infoStay">2026.03.19 ~ 2026.03.20</span>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- 예약 객실 -->
+            <span class="info-section-title">예약 객실</span>
+            <div class="room-list-row" id="infoRooms"></div>
+
+            <div class="divider"></div>
+
+            <!-- 예상 결제 금액 -->
+            <span class="info-section-title">예상 결제 금액</span>
+            <div class="info-row">
+                <div class="info-item">
+                    <span class="info-key">총 금액</span>
+                    <span class="info-val price" id="infoTotal">480,000원</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-key">예상 적립 포인트</span>
+                    <span class="info-val point" id="infoPoint">예상 적립 포인트</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 포인트 안내 바 -->
+        <div class="notice-bar">
+      <span class="notice-text">
+        예약자 정보로 포인트는 자동 적립됩니다.<br>
+        적립 예정인 <span id="point-display"></span> 포인트는 다음 결제 시부터 사용 가능합니다.
+      </span>
+        </div>
+    </div>
+
+    <!-- 하단 고정 -->
+    <div class="footer">
+        <div class="footer-btns">
+            <button class="btn-prev" onclick="goBack()">이전으로</button>
+            <button class="btn-direct-reserve" onclick="directReserve()">바로 예약</button>
+        </div>
+    </div>
+
+    <!-- 타임아웃 모달 -->
+    <div class="modal-overlay hidden" id="timeoutModal">
+        <div class="modal-box">
+            <p><span id="timeoutSec">10</span>초 후<br>메인 화면으로 돌아갑니다.</p>
+            <div class="modal-sub-msg">
+                계속 진행하시려면 화면을 클릭해 주세요.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/customer/header.js}"></script>
+<script th:src="@{/js/customer/modal.js}"></script>
+<script th:src="@{/js/customer/timeout.js}"></script>
+<script>
+    /* 최종 정보 불러오기 */
+    const selectedRooms = JSON.parse(sessionStorage.getItem('selectedRooms') || '[]')
+    const guestInfo = JSON.parse(sessionStorage.getItem('guestInfo') || '{}')
+    const reservation = JSON.parse(sessionStorage.getItem('reservation') || '{}')
+    const checkinDate = sessionStorage.getItem('checkinDate')
+    const checkoutDate = sessionStorage.getItem('checkoutDate')
+    const prevPaidAmount = [[${prevPaidAmount}]]
+
+    /* 최종 금액 구하기 */
+    let total = 0
+    let expectedPoint = 0
+    let basePrice = 0
+    let optionTotal = 0
+    const period = (new Date(checkoutDate) - new Date(checkinDate)) / (1000 * 60 * 60 * 24)
+
+    for (let i = 0; i < selectedRooms.length; i++) {
+        const r = selectedRooms[i]
+        basePrice += r.room.basePrice
+        basePrice *= period
+        expectedPoint = basePrice * 0.01
+
+        for (const id in r.optionsQty) {
+            optionTotal += r.optionsQty[id].qty * r.optionsQty[id].optionPrice
+        }
+        total = basePrice + optionTotal
+    }
+
+    /* 예약자, 예약 객실, 금액 정보 매칭 */
+    let phone = ''
+    if (guestInfo.guestPhone) {
+        phone = guestInfo.guestPhone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+    } else if (guestInfo.memberPhone) {
+        phone = guestInfo.memberPhone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+    }
+
+    document.getElementById('infoName').textContent = guestInfo.guestName || guestInfo.memberName
+    document.getElementById('infoPhone').textContent = phone
+    document.getElementById('infoStay').textContent = checkinDate + ' ~ ' + checkoutDate
+    document.getElementById('infoTotal').textContent = total.toLocaleString() + '원'
+    document.getElementById('infoPoint').textContent = expectedPoint.toLocaleString() + ' 포인트'
+    document.getElementById('point-display').textContent = expectedPoint.toLocaleString()
+
+    /* 예약 객실 정보 출력 */
+    function renderFinalRoomInfo() {
+        const finalRoomSection = document.getElementById('infoRooms')
+        let html = ''
+
+        for (let i = 0; i < selectedRooms.length; i++) {
+            const r = selectedRooms[i]
+            let optionHtml = ''
+            let hasOption = false
+
+            for (const id in r.optionsQty) {
+                if (r.optionsQty[id].qty > 0) {
+                    hasOption = true
+                    const option = r.optionsQty[id]
+                    optionHtml += `
+                    <div class="option-item">
+                        <span class="option-name">${option.optionName} x ${option.qty}</span>
+                        <span class="option-price">${(option.optionPrice * option.qty).toLocaleString()}원</span>
+                    </div>
+                `
+                }
+            }
+
+            if (!hasOption) {
+                optionHtml = `<span class="info-key">- 옵션 선택 사항 없음</span>`
+            }
+
+            html += `
+            <div class="room-group">
+                <div class="room-name">${r.room.roomName}</div>
+                <div class="option-list">
+                    ${optionHtml}
+                </div>
+            </div>
+        `
+        }
+
+        finalRoomSection.innerHTML = html
+    }
+
+    renderFinalRoomInfo()
+
+    function directReserve() {
+        // selectedRooms 유효성 체크
+        if (!selectedRooms || selectedRooms.length === 0) {
+            alert('객실 정보를 찾을 수 없습니다. 처음부터 다시 시도해주세요.')
+            return
+        }
+        if (!guestInfo || (!guestInfo.guestPhone && !guestInfo.memberPhone)) {
+            alert('고객 정보를 찾을 수 없습니다. 처음부터 다시 시도해주세요.')
+            return
+        }
+        if (!checkinDate || !checkoutDate) {
+            alert('숙박 날짜 정보를 찾을 수 없습니다. 처음부터 다시 시도해주세요.')
+            return
+        }
+
+      const csrfToken = document.querySelector('meta[name="_csrf"]') ? document.querySelector('meta[name="_csrf"]').content : ''
+      const csrfHeader = document.querySelector('meta[name="_csrf_header"]') ? document.querySelector('meta[name="_csrf_header"]').content : 'X-CSRF-TOKEN'
+
+      const roomNos = selectedRooms.map(item => item.room.roomNo)
+      const hasOption = selectedRooms.some(item =>
+        Object.values(item.optionsQty || {}).some(o => o.qty > 0)
+      )
+
+      const payload = {
+        memberName:   guestInfo.guestName   || guestInfo.memberName,
+        memberPhone:  guestInfo.guestPhone  || guestInfo.memberPhone,
+        memberBirth:  guestInfo.guestBirth  || guestInfo.memberBirth,
+        roomNos:      roomNos,
+        checkinDate:  checkinDate,
+        checkoutDate: checkoutDate,
+        regPeople:    parseInt(sessionStorage.getItem('regPeople') || '1'),
+        addOption:    hasOption ? 1 : 0
+      }
+
+
+      fetch('/JHotel/onsite/pre-reserve', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          [csrfHeader]: csrfToken
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('서버 오류: ' + res.status)
+        return res.json()
+      })
+      .then(data => {
+        const reservationObj = { reservationIds: data.reservationIds }
+        sessionStorage.setItem('reservation', JSON.stringify(reservationObj))
+        sessionStorage.setItem('paySource', '/onsite/final_check')
+        window.location.href = '/JHotel/pay'
+      })
+      .catch(err => {
+        console.error('예약 임시 등록 실패:', err)
+        alert('예약 처리 중 오류가 발생했습니다. 다시 시도해주세요.')
+      })
+    }
+
+</script>
+</body>
+</html>

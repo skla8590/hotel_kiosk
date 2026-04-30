@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hotel_kiosk.mapper.admin.StatisticMapper">
+    <select id="summaryStatic">
+        SELECT
+            COALESCE(SUM(p.total_charge), 0) AS totalRevenue,
+            /* 평균 객실 이용률 */
+            COALESCE(ROUND(COUNT(CASE WHEN r.status IN ('In','Out') THEN 1 END)/ COUNT(*) * 100, 2), 0) AS avgOccupancy,
+            /* 체크인 건수 */
+            COUNT(CASE WHEN r.status IN ('In','Out') THEN 1 END) AS totalCheckIn
+        FROM reservations r LEFT JOIN payments p ON r.idx = p.idx
+        WHERE r.checkin_date BETWEEN #{startDate} AND #{endDate} AND r.status != 'Cancelled';
+    </select>
+    <select id="beforeSummaryStatic">
+        SELECT
+            COALESCE(SUM(p.total_charge), 0) AS totalRevenue,
+            /* 지난달 객실 이용률 */
+            COALESCE(ROUND(COUNT(CASE WHEN r.status IN ('In','Out') THEN 1 END) / COUNT(*) * 100, 2), 0) AS avgOccupancy,
+            /* 지난달 체크인 건수 */
+            COUNT(CASE WHEN r.status IN ('In','Out') THEN 1 END) AS totalCheckIn
+        FROM reservations r LEFT JOIN payments p ON r.idx = p.idx
+        WHERE r.checkin_date BETWEEN DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01') AND LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) AND r.status != 'Cancelled';
+    </select>
+    <select id="paymentStatic">
+        SELECT CASE
+                WHEN #{unit} = 'DAY' THEN DATE_FORMAT(p.status_at, '%Y-%m-%d')
+                WHEN #{unit} = 'WEEK' THEN CONCAT(
+                        DATE_FORMAT(DATE_SUB(p.status_at, INTERVAL WEEKDAY(p.status_at) DAY), '%m.%d'),
+                        ' ~ ',
+                        DATE_FORMAT(DATE_ADD(DATE_SUB(p.status_at, INTERVAL WEEKDAY(p.status_at) DAY), INTERVAL 6 DAY), '%m.%d'))
+                WHEN #{unit} = 'MONTH' THEN DATE_FORMAT(p.status_at, '%Y-%m')
+                END AS label,
+            COALESCE(SUM(p.total_charge), 0) AS revenue
+        FROM payments p JOIN reservations r ON p.idx = r.idx
+        WHERE p.pay_status = 'Success' AND p.status_at BETWEEN #{startDate} AND #{endDate}
+        GROUP BY label
+        ORDER BY label;
+    </select>
+    <select id="roomStatic">
+        SELECT
+            rm.room_type AS label,
+            ROUND(COUNT(CASE WHEN r.status IN ('In','Out') THEN 1 END) / COUNT(*) * 100, 2) AS rate
+        FROM room_master rm LEFT JOIN reservations r ON rm.room_no = r.room_no AND r.checkin_date BETWEEN #{startDate} AND #{endDate}
+        GROUP BY rm.room_type;
+    </select>
+    <select id="optionStatic">
+        SELECT
+            om.option_name AS label,
+
+            ROUND(
+                    COUNT(orcd.option_id) * 100.0 /
+                    (SELECT COUNT(*)
+                     FROM reservations r2
+                     WHERE r2.checkin_date BETWEEN #{startDate} AND #{endDate}
+                       AND r2.status != 'Cancelled')
+                , 2) AS rate
+
+        FROM options_record orcd
+                 JOIN option_master om ON orcd.option_id = om.option_id
+                 JOIN reservations r ON orcd.idx = r.idx
+
+        WHERE r.checkin_date BETWEEN #{startDate} AND #{endDate}
+          AND r.status != 'Cancelled'
+
+        GROUP BY om.option_name;
+    </select>
+    <select id="excelDownload">
+        SELECT
+            r.reservation_id,
+            r.checkin_date,
+            r.checkout_date,
+            rm.room_type,
+            p.total_charge,
+            p.pay_method,
+            p.pay_status
+        FROM reservations r
+                 JOIN room_master rm ON r.room_no = rm.room_no
+                 LEFT JOIN payments p ON r.idx = p.idx
+        WHERE r.checkin_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY r.checkin_date DESC;
+    </select>
+
+</mapper>

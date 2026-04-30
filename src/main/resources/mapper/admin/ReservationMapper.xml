@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hotel_kiosk.mapper.admin.ReservationReadMapper">
+    <!-- 예약 목록 -->
+    <select id="findAllReservation" resultType="hotel_kiosk.domain.customer.Reservations">
+        SELECT *
+        FROM hotel_kiosk.reservations r JOIN hotel_kiosk.members m
+        ON r.member_no = m.member_no
+        ORDER BY r.reservation_id DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="findReservation" resultType="hotel_kiosk.domain.customer.Reservations">
+        SELECT *
+        FROM hotel_kiosk.reservations r JOIN hotel_kiosk.members m
+        ON r.member_no = m.member_no
+        ORDER BY r.reservation_id DESC
+    </select>
+    <select id="countReservation">
+        SELECT COUNT(*)
+        FROM reservations
+    </select>
+
+    <!-- 예약 조회 -->
+    <select id="findReservationByCheckin" resultType="hotel_kiosk.domain.customer.Reservations">
+        SELECT *
+        FROM hotel_kiosk.reservations r JOIN hotel_kiosk.members m
+        ON r.member_no = m.member_no
+        WHERE r.checkin_date = #{checkinDate}
+    </select>
+    <select id="findReservationByStatus" resultType="hotel_kiosk.domain.customer.Reservations">
+        SELECT *
+        FROM hotel_kiosk.reservations r JOIN hotel_kiosk.members m
+        ON r.member_no = m.member_no
+        WHERE r.status = #{status}
+    </select>
+    <select id="findReservationByNum" resultType="hotel_kiosk.domain.customer.Reservations">
+        SELECT *
+        FROM hotel_kiosk.reservations r JOIN hotel_kiosk.members m
+        ON r.member_no = m.member_no
+        WHERE r.reservation_id = #{reservationId}
+    </select>
+    <select id="findAllReservationByNum" resultType="hotel_kiosk.domain.customer.Reservations">
+        SELECT *
+        FROM hotel_kiosk.reservations r JOIN hotel_kiosk.members m
+        ON r.member_no = m.member_no
+        WHERE r.reservation_id LIKE CONCAT('%', #{reservationId}, '%')
+    </select>
+    <select id="findReservationByName" resultType="hotel_kiosk.domain.customer.Reservations">
+        SELECT *
+        FROM hotel_kiosk.reservations r JOIN hotel_kiosk.members m
+        ON r.member_no = m.member_no
+        WHERE m.member_name = #{memberName}
+    </select>
+    <select id="findAllReservationByName" resultType="hotel_kiosk.domain.customer.Reservations">
+        SELECT *
+        FROM hotel_kiosk.reservations r JOIN hotel_kiosk.members m
+        ON r.member_no = m.member_no
+        WHERE m.member_name LIKE CONCAT('%', #{memberName}, '%')
+    </select>
+
+    <!-- 예약 수정 -->
+    <update id="updateReservation">
+        UPDATE hotel_kiosk.reservations
+        SET checkin_date = #{checkinDate}, checkout_date = #{checkoutDate}, room_no = #{roomNo}
+        WHERE reservation_id = #{reservationId}
+    </update>
+    <update id="updateReservationStatus">
+        UPDATE hotel_kiosk.reservations
+        SET status = #{status}
+        WHERE reservation_id = #{reservationId}
+    </update>
+
+    <!-- 결제 상태 수정 -->
+    <update id="updatePayStatus">
+        UPDATE reservations
+        SET pay_status = #{payStatus}
+        WHERE reservation_id = #{reservationId}
+    </update>
+
+    <!-- 예약 Index 조회 -->
+    <select id="findReservationIdx" resultType="java.lang.Long">
+        SELECT idx
+        FROM reservations
+        WHERE reservation_id = #{reservationId}
+    </select>
+
+    <select id="findAllRoomNos" resultType="int">
+        SELECT room_no FROM hotel_kiosk.room_master ORDER BY room_no
+    </select>
+
+    <select id="findRoomOptions" resultType="hotel_kiosk.domain.admin.RoomOptionsSummary">
+        SELECT
+            r.reservation_id,
+            -- 조식
+            SUM(CASE
+                    WHEN om.option_category = 'Meal' AND om.option_name LIKE CONCAT('조식', '%')
+                        THEN orcd.quantity ELSE 0 END) AS breakfast,
+            -- 석식
+            SUM(CASE
+                    WHEN om.option_category = 'Meal' AND om.option_name LIKE CONCAT('석식', '%')
+                        THEN orcd.quantity ELSE 0 END) AS dinner,
+            -- 이용시설
+            SUM(CASE
+                    WHEN om.option_category = 'Leisure'
+                        THEN orcd.quantity ELSE 0 END) AS facility,
+            -- 어메니티
+            SUM(CASE
+                    WHEN om.option_category = 'Consumable'
+                        THEN orcd.quantity ELSE 0 END) AS amenity
+        FROM reservations r
+                 LEFT JOIN options_record orcd ON r.idx = orcd.idx
+                 LEFT JOIN option_master om ON orcd.option_id = om.option_id
+        WHERE r.reservation_id = #{reservationId}
+        GROUP BY r.reservation_id;
+    </select>
+</mapper>

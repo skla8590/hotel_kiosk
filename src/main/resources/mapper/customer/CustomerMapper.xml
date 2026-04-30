@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hotel_kiosk.mapper.customer.CustomerMapper">
+     <resultMap id="reservationName" type="hotel_kiosk.domain.customer.Reservations" autoMapping="true">
+         <id property="idx" column="idx"/>
+         <result property="roomNo" column="ron"/>
+         <result property="roomName" column="rn"/>
+         <result property="memberName" column="rn"/>
+         <result property="memberPhone" column="rn"/>
+     </resultMap>
+    <select id="selectOneReservation" resultMap="reservationName">
+        select
+            s.*, r.room_name as rn,
+            r.room_no as ron
+        from reservations s
+            join room_master r on s.room_no = r.room_no
+        where reservation_id = #{reservationId} and status = 'Reserved' and checkout_date &gt;= now();
+    </select>
+
+    <!-- 호텔 안내 가져오기 -->
+    <select id="selectAllInformBoard" resultType="hotel_kiosk.domain.admin.InformBoard">
+        select * from inform_board;
+    </select>
+
+    <!-- 고객 조회 -->
+    <select id="selectOneMember" resultType="hotel_kiosk.domain.customer.Members">
+        select * from members where member_no = #{memberNo}
+    </select>
+
+    <!-- 체크인 처리 -->
+    <update id="checkIn">
+        UPDATE reservations
+        SET status = 'In',
+            check_in_at = NOW(),
+            parking_num = CASE WHEN #{parkingNum} != '' THEN #{parkingNum} ELSE parking_num END
+        WHERE reservation_id = #{reservationId}
+    </update>
+
+    <!-- 재결제 -->
+    <select id="selectRoomPriceByReservationId" resultType="int">
+        SELECT COALESCE(ppr.room_price, rm.base_price)
+               * DATEDIFF(r.checkout_date, r.checkin_date)
+        FROM reservations r
+        JOIN room_master rm ON r.room_no = rm.room_no
+        LEFT JOIN pricing_policy_room ppr ON rm.room_no = ppr.room_no
+        WHERE r.reservation_id = #{reservationId}
+        LIMIT 1
+    </select>
+
+    <!-- 재결제 옵션 요금 조회 -->
+    <select id="selectOptionChargeByReservationId" resultType="int">
+        SELECT COALESCE(SUM(option_charge), 0)
+        FROM options_record
+        WHERE idx = (SELECT idx FROM reservations WHERE reservation_id = #{reservationId})
+    </select>
+</mapper>

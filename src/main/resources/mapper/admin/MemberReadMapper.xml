@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hotel_kiosk.mapper.admin.MemberReadMapper">
+    <!-- 고객 목록 -->
+    <select id="findAllCustomer" resultType="hotel_kiosk.domain.customer.Members">
+        SELECT *
+        FROM hotel_kiosk.members m JOIN hotel_kiosk.reservations r
+        ON m.member_no = r.member_no
+        GROUP BY m.member_no
+        ORDER BY m.member_no
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="findCustomerPage" resultType="hotel_kiosk.domain.customer.Members">
+        SELECT *
+        FROM members
+        ORDER BY member_no
+    </select>
+    <select id="countCustomer">
+        SELECT COUNT(*)
+        FROM members
+    </select>
+
+    <select id="findCustomer" resultType="hotel_kiosk.domain.customer.Members">
+        SELECT
+            m.member_no,
+            m.member_name,
+            m.member_phone,
+            m.member_birth,
+            m.member_point,
+            m.reservation_count,
+
+            /* 마지막 방문 (가장 최근 체크아웃 기준) */
+            (
+                SELECT MAX(r.check_out_at)
+                FROM reservations r
+                WHERE r.member_no = m.member_no
+            ) AS lastVisit
+
+        FROM members m
+        WHERE m.member_no = #{memberNo}
+    </select>
+
+    <!-- 고객 조회 (고객명) -->
+    <select id="findCustomerByName" resultType="hotel_kiosk.domain.customer.Members">
+        SELECT *
+        FROM hotel_kiosk.members m JOIN hotel_kiosk.reservations r
+        ON m.member_no = r.member_no
+        WHERE m.member_name LIKE CONCAT('%', #{memberName}, '%')
+    </select>
+
+    <!-- 고객 조회 (연락처) -->
+    <select id="findCustomerByPhone" resultType="hotel_kiosk.domain.customer.Members">
+        SELECT *
+        FROM hotel_kiosk.members m JOIN hotel_kiosk.reservations r
+        ON m.member_no = r.member_no
+        WHERE m.member_phone LIKE CONCAT('%', #{memberPhone}, '%')
+    </select>
+
+    <!-- 포인트 복구 -->
+    <update id="addPoint">
+        UPDATE members
+        SET member_point = member_point + #{usedPoint}
+        WHERE member_no = #{memberNo}
+    </update>
+
+    <!-- 포인트 회수 -->
+    <update id="usePoint">
+        UPDATE members
+        SET member_point = member_point - #{earnedPoint}
+        WHERE member_no = #{memberNo}
+    </update>
+
+    <!-- 누적 금액 -->
+    <select id="allSumPayment" resultType="Integer">
+        SELECT
+            IFNULL(SUM(p.total_charge), 0) AS total_amount
+
+        FROM members m
+                 JOIN reservations r
+                      ON m.member_no = r.member_no
+
+                 LEFT JOIN payments p
+                           ON r.member_no = p.idx
+                               AND p.pay_status = 'Success'
+
+        WHERE m.member_no = #{memberNo}
+
+        GROUP BY m.member_no, m.member_name;
+    </select>
+
+    <!-- 최근 방문 기록 -->
+    <select id="recentDate">
+        SELECT check_in_at
+        FROM reservations
+        WHERE member_no = #{memberNo}
+          AND check_in_at IS NOT NULL
+          AND status in ('In', 'Out')
+        ORDER BY check_in_at DESC
+        LIMIT 1;
+    </select>
+</mapper>

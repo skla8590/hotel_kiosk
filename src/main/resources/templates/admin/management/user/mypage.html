@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout/layout :: page(title='My Page', content=~{::main}, pageScript=~{::script})}">
+<head></head>
+<body>
+<main>
+
+    <div class="mypage-wrap">
+        <div class="card">
+            <div class="card-head"><span class="card-title">정보 수정</span></div>
+            <div class="card-body">
+                <div class="form-grid" style="margin-top:4px">
+
+                    <!-- 아이디 (읽기 전용, Thymeleaf 렌더링) -->
+                    <div class="fg full">
+                        <label class="lbl">아이디</label>
+                        <input class="inp"
+                               th:value="${auth != null && auth.adminId != null ? auth.adminId : ''}"
+                               readonly>
+                    </div>
+
+                    <!-- 비밀번호 -->
+                    <div class="fg full">
+                        <label class="lbl">현재 비밀번호</label>
+                        <input type="password" class="inp" id="current-pw" placeholder="현재 비밀번호를 입력해주세요">
+                    </div>
+                    <div class="fg full">
+                        <label class="lbl">새 비밀번호</label>
+                        <input type="password" class="inp" id="new-pw" placeholder="새로운 비밀번호를 입력해주세요">
+                        <div id="pw-msg" class="form-msg"></div>
+                    </div>
+                    <div class="fg full">
+                        <label class="lbl">비밀번호 확인</label>
+                        <input type="password" class="inp" id="confirm-pw" placeholder="비밀번호를 확인해주세요">
+                        <div id="pw-confirm-msg" class="form-msg"></div>
+                    </div>
+
+                    <!-- 이메일 (Thymeleaf로 초기값 렌더링) -->
+                    <div class="fg full">
+                        <label class="lbl">이메일</label>
+                        <div style="display:flex;gap:8px">
+                            <input class="inp" id="email-input"
+                                   th:value="${auth != null && auth.adminEmail != null ? auth.adminEmail : ''}"
+                                   style="flex:1">
+                            <button id="btn-send-verify" class="btn btn-ghost" onclick="mypage.sendEmailVerify()">인증번호 발송</button>
+                        </div>
+                    </div>
+
+                    <!-- 연락처 (Thymeleaf로 초기값 렌더링) -->
+                    <div class="fg full">
+                        <label class="lbl">연락처</label>
+                        <input class="inp" id="phone-input"
+                               th:value="${auth != null && auth.adminPhone != null ? auth.adminPhone : ''}">
+                    </div>
+
+                </div>
+
+                <div class="form-actions mt-20">
+                    <button class="btn btn-gold" onclick="mypage.submitMypage()">수정</button>
+                    <a class="btn btn-ghost" th:href="@{/admin/dashboard}">취소</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 이메일 인증 모달 -->
+    <div class="overlay" id="modal-email-verify">
+        <div class="modal modal-sm">
+            <div class="modal-head">
+                <span class="modal-title">이메일 인증</span>
+                <button class="modal-close" onclick="closeModal('modal-email-verify')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="fg" style="margin-bottom:12px">
+                    <label class="lbl">이메일</label>
+                    <input class="inp" id="verify-email-display" readonly>
+                </div>
+                <div class="fg">
+                    <label class="lbl">인증번호</label>
+                    <input class="inp" id="verify-code" placeholder="인증번호 6자리 입력" maxlength="6">
+                    <span class="hint" id="verify-timer" style="color:var(--c-orange)">남은 시간 05:00</span>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn btn-ghost" onclick="closeModal('modal-email-verify')">취소</button>
+                <button class="btn btn-gold" onclick="mypage.confirmEmailVerify()">인증 확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 이메일 인증 미완료 -->
+    <div class="overlay" id="modal-mypage-unverified">
+        <div class="modal modal-sm modal-alert">
+            <div class="modal-body">
+                <span class="alert-ico">✉️</span>
+                <div class="alert-msg">이메일 인증 후 수정 가능합니다</div>
+                <div class="alert-sub">이메일 인증을 먼저 완료해 주세요.</div>
+            </div>
+            <div class="modal-foot" style="justify-content:center">
+                <button class="btn btn-gold" onclick="closeModal('modal-mypage-unverified')">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 수정 완료 -->
+    <div class="overlay" id="modal-mypage-done">
+        <div class="modal modal-sm modal-alert">
+            <div class="modal-body">
+                <span class="alert-ico">✅</span>
+                <div class="alert-msg">정보가 수정되었습니다</div>
+            </div>
+            <div class="modal-foot" style="justify-content:center">
+                <button class="btn btn-gold" onclick="closeModal('modal-mypage-done')">확인</button>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

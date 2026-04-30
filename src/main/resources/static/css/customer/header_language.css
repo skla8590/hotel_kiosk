@@ -1,0 +1,38 @@
+/* 언어 선택 css */
+.header {
+    padding: 3.5cqw 4cqw 0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.lang-selector {
+    display: flex;
+    gap: 0.8cqw;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 99px;
+    padding: 0.5cqw;
+}
+
+.lang-btn {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2.8cqw;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: #999;
+    border: none;
+    background: transparent;
+    border-radius: 99px;
+    padding: 1.2cqw 3cqw;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.lang-btn.active {
+    background: var(--green);
+    color: #fff;
+    box-shadow: 0 0.3cqw 1.5cqw rgba(30, 77, 58, 0.35);
+}
+
+.lang-btn:not(.active):hover {
+    color: var(--green);
+}

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 로그인 — Hotel Admin</title>
+
+    <!-- Spring Security CSRF (fetch 사용 시 헤더로 전달) -->
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <!-- 로그인 전용 CSS -->
+    <link rel="stylesheet" th:href="@{/css/admin/login.css}">
+
+    <!-- axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     상단 헤더 바
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="top-bar">
+    <div class="top-bar-title" id="pageTitle">관리자 로그인</div>
+</div>
+
+<div class="page-body">
+    <div class="card">
+
+        <!-- ════════════════════════════
+             VIEW A : 로그인 폼
+        ════════════════════════════ -->
+        <div class="view active" id="viewLogin">
+            <div class="card-inner">
+
+                <!-- 브랜드 -->
+                <div class="brand">
+                    <div class="brand-name">HOTEL ADMIN</div>
+                    <div class="brand-sub">키오스크 관리자 시스템</div>
+                </div>
+
+                <!--
+                  Spring Security 로그인 폼
+                  ▸ loginPage("/admin/login")
+                  ▸ loginProcessingUrl("/admin/login")   ← POST 처리 URL
+                  ▸ failureUrl("/admin/login?error")
+                  ▸ defaultSuccessUrl("/admin/dashboard")
+                -->
+                <form th:action="@{/admin/login}" method="post"
+                      id="loginForm" novalidate>
+
+                    <!-- CSRF 토큰 (Spring Security 필수) -->
+                    <input type="hidden"
+                           th:name="${_csrf.parameterName}"
+                           th:value="${_csrf.token}">
+
+                    <!-- ① 로그인 실패 에러 박스 -->
+                    <!--   Controller 에서 model.addAttribute("errorMsg", ...) 로 직접 전달하거나
+                           Spring Security 기본 예외 메시지를 사용 -->
+                    <div class="error-box" th:if="${errorMsg}">
+                        <span th:text="${errorMsg}">아이디 또는 비밀번호를 확인해주세요.</span>
+                    </div>
+
+                    <!-- ② 관리자 ID -->
+                    <div class="field">
+                        <label class="field-label" for="username">관리자 ID</label>
+                        <input class="inp-solo"
+                               type="text"
+                               id="username"
+                               name="username"
+                               placeholder="superadmin1 / admin1"
+                               th:classappend="${errorMsg != null} ? 'is-error'"
+                               autocomplete="username"
+                               autofocus>
+                    </div>
+
+                    <!-- ③ 비밀번호 -->
+                    <div class="field">
+                        <label class="field-label" for="password">비밀번호</label>
+                        <input class="inp-solo"
+                               type="password"
+                               id="password"
+                               name="password"
+                               placeholder="••••••••"
+                               th:classappend="${errorMsg != null} ? 'is-error'"
+                               autocomplete="current-password">
+                    </div>
+
+                    <!-- ④ 5회 실패 경고 문구 (항상 표시) -->
+                    <p class="warn-text">로그인 5 회 실패 시 계정이 잠깁니다</p>
+
+                    <!-- ⑤ 로그인 버튼 -->
+                    <button type="submit" class="btn-submit" id="btnLogin">
+                        로그인
+                    </button>
+                </form>
+            </div><!-- /card-inner -->
+
+            <div class="card-footer">
+                <hr class="footer-hr">
+                <!-- 최고 관리자 연락처 (Controller 에서 superAdminPhone 전달) -->
+                <p class="footer-contact">
+                    최고 관리자 연락처 ：
+                    <span th:text="${superAdminPhone != null} ? ${superAdminPhone} : '010-****-****'">
+              010-****-****
+            </span>
+                </p>
+                <hr class="footer-hr">
+                <!-- 이메일 인증 화면으로 전환 -->
+                <div class="footer-link-wrap">
+                    <button class="footer-link" onclick="switchToVerify()">
+                        비밀번호를 잊으셨나요？
+                    </button>
+                </div>
+            </div>
+        </div><!-- /viewLogin -->
+
+
+        <!-- ════════════════════════════
+             VIEW B : 이메일 인증 폼
+        ════════════════════════════ -->
+        <div class="view" id="viewVerify">
+            <div class="card-inner">
+
+                <!-- 브랜드 -->
+                <div class="brand">
+                    <div class="brand-name">HOTEL ADMIN</div>
+                    <div class="brand-sub">키오스크 관리자 시스템</div>
+                </div>
+
+                <!-- ① 이메일 + 인증번호 발송 버튼 (인풋 내장) -->
+                <div class="field">
+                    <label class="field-label">관리자 Email</label>
+                    <div class="input-wrap" id="emailWrap">
+                        <input type="email"
+                               id="verifyEmail"
+                               placeholder="superadmin1@hotel.com"
+                               autocomplete="email">
+                        <button type="button"
+                                class="input-inner-btn"
+                                onclick="sendCode()">인증번호<br>발송
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ② 인증번호 + 타이머 (인풋 내장) -->
+                <div class="field">
+                    <label class="field-label">인증번호</label>
+                    <div class="input-wrap">
+                        <input type="text"
+                               id="verifyCode"
+                               placeholder="• • • • • • •"
+                               maxlength="7"
+                               autocomplete="one-time-code">
+                        <div class="input-timer" id="verifyTimer">남은 시간 05:00</div>
+                    </div>
+                </div>
+
+                <!-- ③ 인증 완료 버튼 -->
+                <button type="button" class="btn-submit" onclick="confirmCode()">
+                    인증 완료
+                </button>
+
+            </div><!-- /card-inner -->
+
+            <div class="card-footer">
+                <hr class="footer-hr">
+                <div class="footer-link-wrap">
+                    <button class="footer-link" onclick="switchToLogin()">
+                        ← 로그인으로 돌아가기
+                    </button>
+                </div>
+            </div>
+        </div><!-- /viewVerify -->
+
+    </div><!-- /card -->
+</div><!-- /page-body -->
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     모달 : 로그인 5회 실패
+     Controller 에서 failCount >= 5 이면
+     model.addAttribute("locked", true) 전달
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="overlay" id="modalLocked"
+     th:classappend="${locked} ? 'open'">
+    <div class="modal-card">
+        <div class="modal-fail-title">로그인 5 회 실패</div>
+        <div class="modal-fail-sub">* 최고관리자에게 문의해주세요</div>
+        <button class="btn-modal-ok"
+                onclick="closeOverlay('modalLocked')">확인
+        </button>
+    </div>
+</div>
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     JavaScript
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<script th:inline="javascript">
+    /* ────────── 로그인 아이디 검증 및 저장 ──────────── */
+    const input = document.querySelector(".inp-solo[name='username']");
+    const form = document.querySelector("#loginForm");
+
+    const savedId = sessionStorage.getItem("loginId");
+
+    if (savedId && input) {
+        input.value = savedId;
+    }
+
+    if (form) {
+        form.addEventListener("submit", function () {
+            sessionStorage.setItem("loginId", input.value);
+        });
+    }
+
+    /* ───────────────── 뷰 전환 ─────────────────── */
+    function switchToVerify() {
+        document.getElementById('viewLogin').classList.remove('active');
+        document.getElementById('viewVerify').classList.add('active');
+        document.getElementById('pageTitle').textContent = '관리자 이메일 인증';
+    }
+
+    function switchToLogin() {
+        document.getElementById('viewVerify').classList.remove('active');
+        document.getElementById('viewLogin').classList.add('active');
+        document.getElementById('pageTitle').textContent = '관리자 로그인';
+        clearInterval(_timer);
+    }
+
+    /* ─────────────── 모달 제어 ─────────────────── */
+    function openOverlay(id) {
+        document.getElementById(id)?.classList.add('open');
+    }
+
+    function closeOverlay(id) {
+        document.getElementById(id)?.classList.remove('open');
+    }
+
+    // 오버레이 배경 클릭 / ESC 로 닫기
+    document.addEventListener('click', e => {
+        if (e.target.classList.contains('overlay')) e.target.classList.remove('open');
+    });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape')
+            document.querySelectorAll('.overlay.open').forEach(o => o.classList.remove('open'));
+    });
+
+    /* ── 서버에서 failCount 주입 → 5회 시 자동 모달 ── */
+    const _failCount = [[${failCount != null ? failCount : 0}]];
+    if (Number(_failCount) >= 5) openOverlay('modalLocked');
+
+    /* ───────────────── 타이머 ──────────────────── */
+    let _timer = null;
+
+    function startTimer(totalSec) {
+        clearInterval(_timer);
+        const el = document.getElementById('verifyTimer');
+        (function tick() {
+            if (!el) return;
+            if (totalSec <= 0) {
+                clearInterval(_timer);
+                el.textContent = '시간 초과';
+                return;
+            }
+            const m = String(Math.floor(totalSec / 60)).padStart(2, '0');
+            const s = String(totalSec % 60).padStart(2, '0');
+            el.textContent = '남은 시간 ' + m + ':' + s;
+            totalSec--;
+        })();
+        _timer = setInterval(arguments.callee = function tick() {
+            if (!el) return;
+            if (totalSec <= 0) {
+                clearInterval(_timer);
+                el.textContent = '시간 초과';
+                return;
+            }
+            const m = String(Math.floor(totalSec / 60)).padStart(2, '0');
+            const s = String(totalSec % 60).padStart(2, '0');
+            el.textContent = '남은 시간 ' + m + ':' + s;
+            totalSec--;
+        }, 1000);
+    }
+
+    /* ────────────── 인증번호 발송 ──────────────── */
+    function sendCode() {
+        const email = document.getElementById('verifyEmail').value.trim();
+        if (!email) {
+            alert('이메일을 입력해주세요.');
+            return;
+        }
+
+        const csrfToken  = document.querySelector('meta[name="_csrf"]')?.content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+        axios.post('/api/admin/email/verify', { email }, {
+            headers: { ...(csrfHeader && { [csrfHeader]: csrfToken }) }
+        })
+            .then(res => {
+                if (res.data.success) startTimer(300);
+                else alert('등록된 이메일이 아닙니다.');
+            })
+            .catch(() => alert('발송 실패. 다시 시도해주세요.'));
+    }
+
+    /* ───────────── 인증번호 확인 ───────────────── */
+    function confirmCode() {
+        const code = document.getElementById('verifyCode').value.trim();
+        if (!code) {
+            alert('인증번호를 입력해주세요.');
+            return;
+        }
+
+        const csrfToken  = document.querySelector('meta[name="_csrf"]')?.content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+        axios.post('/api/admin/email/verify/confirm', { code }, {
+            headers: { ...(csrfHeader && { [csrfHeader]: csrfToken }) }
+        })
+            .then(res => {
+                if (res.data.success) { clearInterval(_timer); switchToLogin(); }
+                else alert('인증번호가 올바르지 않습니다.');
+            })
+            .catch(() => alert('인증 실패. 다시 시도해주세요.'));
+    }
+
+    /* ────────── 로그인 폼 유효성 검사 ──────────── */
+    document.getElementById('loginForm')?.addEventListener('submit', function (e) {
+        const id = document.getElementById('username').value.trim();
+        const pw = document.getElementById('password').value.trim();
+        if (!id) document.getElementById('username').classList.add('is-error');
+        if (!pw) document.getElementById('password').classList.add('is-error');
+        if (!id || !pw) {
+            e.preventDefault();
+            return;
+        }
+
+        // 버튼 비활성화 (중복 제출 방지)
+        const btn = document.getElementById('btnLogin');
+        btn.disabled = true;
+        btn.textContent = '로그인 중...';
+    });
+
+    // 입력 시 에러 클래스 자동 제거
+    ['username', 'password'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', function () {
+            this.classList.remove('is-error');
+        });
+    });
+</script>
+</body>
+</html>

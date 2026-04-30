@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{admin/layout/layout :: page(title='통계·리포트', content=~{::main}, pageScript=~{::script})}">
+<head></head>
+<body>
+<main>
+
+  <!-- 기간 조회 툴바 -->
+  <div class="toolbar" style="margin-bottom:20px">
+    <input type="date" class="flt-select" id="stats-start"
+           th:value="${param.startDate != null ? param.startDate : (today != null ? #temporals.format(today.minusDays(29),'yyyy-MM-dd') : '')}">
+    <span class="txt-3" style="font-size:13px">~</span>
+    <input type="date" class="flt-select" id="stats-end"
+           th:value="${param.endDate != null ? param.endDate : (today != null ? #temporals.format(today,'yyyy-MM-dd') : '')}">
+    <select class="flt-select" id="stats-unit">
+      <option value="DAY"   th:selected="${param.unit == 'DAY'}">일별</option>
+      <option value="WEEK"  th:selected="${param.unit == 'WEEK'}">주별</option>
+      <option value="MONTH" th:selected="${param.unit == 'MONTH'}">월별</option>
+    </select>
+    <button class="btn btn-primary" onclick="statistic.search()">조회</button>
+    <button class="btn btn-ghost ml-auto" onclick="statistic.downloadExcel()">📥 엑셀 다운로드</button>
+  </div>
+
+  <!-- 탭 -->
+  <div class="tab-bar" id="stats-tab-bar">
+    <div class="tab-item active" onclick="statistic.switchTab(this,'stats-revenue')">매출 통계</div>
+    <div class="tab-item"        onclick="statistic.switchTab(this,'stats-occupancy')">객실 이용률</div>
+    <div class="tab-item"        onclick="statistic.switchTab(this,'stats-options')">옵션 이용률</div>
+  </div>
+
+  <!-- 요약 카드 -->
+  <div class="stat-summary-grid">
+    <div class="stat-card">
+      <div class="sc-label">기간 총 매출</div>
+      <div id="totalRevenue" class="sc-val"
+           th:text="${statSummary != null && statSummary.totalRevenue != null
+             ? '₩' + #numbers.formatInteger(statSummary.totalRevenue / 10000, 1, 'COMMA') + '만'
+             : '₩0'}">₩0</div>
+      <div id="revenueGrowth" class="sc-sub"
+           th:text="${statSummary != null && statSummary.revenueGrowth != null
+             ? '↑ 전월 대비 +' + statSummary.revenueGrowth + '%'
+             : ''}"></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="sc-label">평균 객실 이용률</div>
+      <div id="avgOccupancy" class="sc-val"
+           th:text="${statSummary != null && statSummary.avgOccupancy != null
+             ? statSummary.avgOccupancy + '%'
+             : '0%'}">0%</div>
+      <div id="occupancyGoal" class="sc-sub"
+           style="color:var(--c-txt-3)"
+           th:text="${statSummary != null && statSummary.occupancyGoal != null
+             ? '목표 ' + statSummary.occupancyGoal + '%'
+             : ''}"></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="sc-label">총 체크인 건수</div>
+      <div id="totalCheckIn" class="sc-val"
+           th:text="${statSummary != null && statSummary.totalCheckIn != null
+             ? statSummary.totalCheckIn + '건'
+             : '0건'}">0건</div>
+      <div id="checkInGrowth" class="sc-sub"
+           th:text="${statSummary != null && statSummary.checkInGrowth != null
+             ? '↑ 전월 대비 +' + statSummary.checkInGrowth + '%'
+             : ''}"></div>
+    </div>
+  </div>
+
+  <!-- 매출 차트 -->
+  <div id="stats-revenue">
+    <div class="card">
+      <div class="card-head"><span class="card-title" id="revenueTitle">날짜별 매출 추이</span></div>
+      <div class="card-body">
+        <div class="chart-bars" id="paymentChart">
+
+          <div th:each="bar : ${revenueChart}" class="bar-col">
+            <div class="bar-fill"
+                 th:classappend="${bar.isGold} ? 'gold'"
+                 th:style="'height:' + (${bar.height != null ? bar.height : 0}) + '%'"></div>
+            <div class="bar-lbl"
+                 th:text="${bar.label != null ? bar.label : '-'}"></div>
+          </div>
+
+          <th:block th:if="${revenueChart == null or #lists.isEmpty(revenueChart)}">
+            <div class="bar-col"><div class="bar-fill" style="height:0%"></div><div class="bar-lbl">-</div></div>
+          </th:block>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 객실 이용률 -->
+  <div id="stats-occupancy" style="display:none">
+    <div class="card">
+      <div class="card-head"><span class="card-title">전체 평균 객실 이용률 (객실 타입별)</span></div>
+      <div class="card-body">
+
+        <div class="donut-legend">
+          <div th:each="oc : ${occupancyChart}" class="legend-row">
+            <span class="legend-dot"
+                  th:style="'background:' + (${oc.color != null ? oc.color : '#ccc'})"></span>
+            <span th:text="${oc.label != null ? oc.label : '-'}"></span>
+            <span class="legend-val"
+                  th:text="${oc.rate != null ? oc.rate + '%' : '0%'}"></span>
+          </div>
+
+          <th:block th:if="${occupancyChart == null or #lists.isEmpty(occupancyChart)}">
+            <div class="legend-row">
+              <span class="legend-dot" style="background:#ccc"></span>-
+              <span class="legend-val">0%</span>
+            </div>
+          </th:block>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 옵션 -->
+  <div id="stats-options" style="display:none">
+    <div class="card">
+      <div class="card-head"><span class="card-title">옵션 이용률</span></div>
+      <div class="card-body">
+        <div class="chart-bars">
+
+          <div th:each="op : ${optionChart}" class="bar-col">
+            <div class="bar-fill gold"
+                 th:style="'height:' + (${op.rate != null ? op.rate : 0}) + '%'"></div>
+            <div class="bar-lbl"
+                 th:text="${op.label != null ? op.label : '-'}"></div>
+          </div>
+
+          <th:block th:if="${optionChart == null or #lists.isEmpty(optionChart)}">
+            <div class="bar-col"><div class="bar-fill gold" style="height:0%"></div><div class="bar-lbl">-</div></div>
+          </th:block>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</body>
+</html>

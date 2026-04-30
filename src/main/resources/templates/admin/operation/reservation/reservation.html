@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout/layout :: page(title='예약 관리', content=~{::main}, pageScript=~{::script})}">
+<head></head>
+<body>
+<main>
+    <div class="tab-bar" style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="tab-item active"
+                onclick="reservation.changeTab('RESERVATION', event)">
+            예약
+        </button>
+        <button class="tab-item"
+                onclick="reservation.changeTab('REFUND', event)">
+            환불
+        </button>
+    </div>
+
+    <!-- 검색 툴바 -->
+    <div class="toolbar">
+        <div class="search-wrap">
+            <span class="ico">🔍</span>
+            <input type="text" id="res-keyword" placeholder="예약번호 / 고객명 검색"
+                   th:value="${param.keyword}">
+        </div>
+        <div class="btn-title">
+            <span>체크인 날짜</span>
+        </div>
+        <input type="date" id="res-date" class="flt-select"
+               th:value="${param.date}">
+        <select id="res-status" class="flt-select">
+            <option value="">전체 상태</option>
+            <option value="Reserved" th:selected="${param.status == 'Reserved'}">예약</option>
+            <option value="In" th:selected="${param.status == 'In'}">체크인</option>
+            <option value="Out" th:selected="${param.status == 'Out'}">체크아웃</option>
+            <option value="Cancelled" th:selected="${param.status == 'Cancelled'}">취소</option>
+        </select>
+        <button class="btn btn-primary" onclick="reservation.search()">검색</button>
+    </div>
+
+    <div class="card">
+        <div class="tbl-wrap">
+            <table class="tbl">
+                <thead>
+                <tr>
+                    <th>예약번호</th>
+                    <th>고객명</th>
+                    <th>객실</th>
+                    <th>체크인</th>
+                    <th>체크아웃</th>
+                    <th>상태</th>
+                    <th>상세</th>
+                </tr>
+                </thead>
+                <tbody id="tbody-reservations">
+                <!-- th:each 로 서버 데이터 초기 렌더 -->
+                <th:block th:if="${#lists.isEmpty(reservations.dtoList)}">
+                    <tr th:each="r : ${reservations.dtoList}" onclick="selectRow(this)"
+                        th:data-id="${r.reservationId}">
+                        <td class="fw700" th:text="${r.reservationId}">R2026-000312</td>
+                        <td th:text="${r.memberName}">김민준</td>
+                        <td th:text="${r.roomNo}">1101</td>
+                        <td th:text="${r.checkinDate}">03/12</td>
+                        <td th:text="${r.checkoutDate}">03/14</td>
+                        <td>
+                          <span class="badge"
+                                th:classappend="${r.status == 'Reserved' ? 'badge-blue' :
+                                   r.status == 'In' ? 'badge-yellow' :
+                                   r.status == 'Out'  ? 'badge-orange' : 'badge-red'}"
+                                th:text="${r.status == 'Reserved' ? '예약' :
+                                     r.status == 'In' ? '체크인' :
+                                     r.status == 'Out'  ? '체크아웃' : '실패'}">확정
+                          </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-ghost btn-xs"
+                                    th:data-id="${r.reservationId}"
+                                    onclick="reservation.loadDetail(this.dataset.id); event.stopPropagation()">
+                                상세
+                            </button>
+                        </td>
+                    </tr>
+                </th:block>
+                <!-- 데이터 없음 -->
+                <th:block th:if="${#lists.isEmpty(reservations.dtoList)}">
+                    <tr>
+                        <td colspan="7" style="text-align:center;padding:28px;color:var(--c-txt-3)">
+                            조회된 예약이 없습니다.
+                        </td>
+                    </tr>
+                </th:block>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="pagination">
+        <a th:if="${reservations.prev}"
+           th:href="@{/admin/reservation(page=${reservations.start - 1})}">이전</a>
+
+        <span th:each="i : ${#numbers.sequence(reservations.start, reservations.end)}">
+        <a href="javascript:void(0)"
+           th:attr="onclick=|movePage(${i})|"
+           th:text="${i}"
+           th:classappend="${i == reservations.page} ? 'active' : ''"></a>
+    </span>
+
+        <a th:if="${reservations.next}"
+           th:href="@{/admin/reservation(page=${reservations.end + 1})}">다음</a>
+    </div>
+
+    <!-- ══ 예약 상세 모달 ══ -->
+    <div class="overlay" id="modal-res-detail">
+        <div class="modal modal-lg">
+            <div class="modal-head">
+                <span class="modal-title">예약 상세 정보</span>
+                <button class="modal-close" onclick="closeModal('modal-res-detail')">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+
+                    <!-- 좌: 예약 정보 -->
+                    <div>
+                        <div class="section-hd">예약 정보</div>
+                        <div class="detail-kv">
+                            <div class="kv-row"><span class="kv-key">예약번호</span> <span class="kv-val fw700"
+                                                                                       id="detail-id"></span></div>
+                            <div class="kv-row"><span class="kv-key">고객명</span> <span class="kv-val"
+                                                                                      id="detail-guest"></span></div>
+                            <div class="kv-row"><span class="kv-key">객실</span> <span class="kv-val"
+                                                                                     id="detail-room"></span></div>
+                            <div class="kv-row"><span class="kv-key">체크인</span> <span class="kv-val"
+                                                                                      id="detail-checkin"></span></div>
+                            <div class="kv-row"><span class="kv-key">체크아웃</span> <span class="kv-val"
+                                                                                       id="detail-checkout"></span>
+                            </div>
+                            <div class="kv-row"><span class="kv-key">인원</span> <span class="kv-val"
+                                                                                     id="detail-people"></span></div>
+                            <div class="kv-row"><span class="kv-key">결제금액</span>
+                                <span class="kv-val fw700" id="detail-amount" style="color:var(--c-blue)"></span></div>
+                        </div>
+                    </div>
+
+                    <!-- 우: 상태 변경 + 옵션 -->
+                    <div>
+                        <div class="section-hd">예약 상태 변경</div>
+                        <div id="status-group" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+                            <button class="btn btn-ghost btn-sm" data-status="Waiting">결제 대기</button>
+                            <button class="btn btn-primary btn-sm" data-status="Success">결제 확정</button>
+                            <button class="btn btn-danger btn-sm" data-status="Refund">취소</button>
+                        </div>
+                        <div class="section-hd">선택 옵션</div>
+                        <div class="detail-kv">
+                            <div class="kv-row"><span class="kv-key">조식</span> <span class="kv-val"
+                                                                                     id="opt-breakfast">-</span></div>
+                            <div class="kv-row"><span class="kv-key">석식</span> <span class="kv-val"
+                                                                                     id="opt-dinner">-</span></div>
+                            <div class="kv-row"><span class="kv-key">이용시설</span> <span class="kv-val" id="opt-facility">-</span>
+                            </div>
+                            <div class="kv-row"><span class="kv-key">어메니티</span> <span class="kv-val"
+                                                                                       id="opt-amenity">-</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <!-- 예약 정보 수정 -->
+                <div class="section-hd">예약 정보 수정</div>
+                <div class="form-grid">
+                    <div class="fg">
+                        <label class="lbl">체크인 날짜</label>
+                        <input type="date" class="inp" id="res-edit-checkin">
+                    </div>
+                    <div class="fg">
+                        <label class="lbl">체크아웃 날짜</label>
+                        <input type="date" class="inp" id="res-edit-checkout">
+                    </div>
+                    <div class="fg">
+                        <label class="lbl">객실 변경</label>
+                        <select class="sel" id="res-edit-room">
+                            <!-- AJAX로 가용 객실 목록 채움 -->
+                        </select>
+                    </div>
+                    <div style="margin-top:12px;padding:12px 14px;background:var(--c-surface-2);
+                    border-radius:var(--r-sm);display:flex;justify-content:space-between">
+                        <span style="font-size:12px;color:var(--c-txt-2)">변경 후 요금</span>
+                        <span class="fw700" id="detail-changed-amount" style="font-size:16px"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn btn-ghost" onclick="closeModal('modal-res-detail')">닫기</button>
+                <button class="btn btn-danger" onclick="reservation.cancel(currentResId)">환불</button>
+                <button class="btn btn-gold" onclick="reservation.save(currentResId)">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 현재 열린 예약 ID 추적
+        let currentResId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 서버 렌더링된 목록이 비어있으면 AJAX 조회
+            if (!document.querySelector('#tbody-reservations tr[data-id]')) {
+                reservation.search();
+            }
+        });
+    </script>
+    <script type="module" src="/js/admin/reservation.js"></script>
+
+</main>
+</body>
+</html>

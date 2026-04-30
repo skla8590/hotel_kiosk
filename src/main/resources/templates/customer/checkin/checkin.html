@@ -1,0 +1,255 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Kiosk</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" th:href="@{/css/customer/kiosk.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/header_main.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/top_title.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/modal.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/numKeyboard.css}">
+
+    <style>
+        .center-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5cqw;
+            padding: 4cqw 5cqw;
+            margin-bottom: 20cqw;
+        }
+
+        .input-card {
+            width: 100%;
+            background: var(--surface);
+            border-radius: 2.5cqw;
+            border: 1px solid var(--border);
+            box-shadow: 0 0.8cqw 4cqw var(--shadow);
+            padding: 4cqw;
+            display: flex;
+            flex-direction: column;
+            gap: 3cqw;
+        }
+
+        .input-label {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3.2cqw;
+            font-weight: 500;
+            color: var(--text);
+            letter-spacing: 0.02em;
+        }
+
+        /* ── 텍스트 입력 ── */
+        .input-field {
+            width: 100%;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3.2cqw;
+            font-weight: 500;
+            color: var(--text);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 1.5cqw;
+            padding: 2.5cqw 3cqw;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            letter-spacing: 0.05em;
+        }
+
+        .input-field::placeholder {
+            color: #bbb;
+            font-weight: 400;
+        }
+
+        .input-field:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 0.4cqw rgba(30,77,58,0.1);
+            background: var(--surface);
+        }
+
+        .reservation-input-wrap {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border);
+            border-radius: 1.5cqw;
+            background: var(--bg);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .reservation-input-wrap:focus-within {
+            border-color: var(--green);
+            box-shadow: 0 0 0 0.4cqw rgba(30,77,58,0.1);
+            background: var(--surface);
+        }
+
+        .reservation-front, .reservation-back {
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            flex: 1;
+            text-align: center;
+        }
+
+        .reservation-front:focus, .reservation-back:focus {
+            border: none;
+            box-shadow: none;
+            background: transparent;
+        }
+
+        .reservation-dash {
+            font-size: 3.2cqw;
+            color: var(--text);
+        }
+
+        /* ── 예약 조회 버튼 ── */
+        .btn-search {
+            width: 100%;
+            font-size: 4cqw;
+            font-weight: 500;
+            color: #fff;
+            background: #2e2e2e;
+            border: none;
+            border-radius: 1.8cqw;
+            padding: 3cqw;
+            cursor: pointer;
+            letter-spacing: 0.06em;
+            box-shadow: 0 1cqw 3cqw rgba(0,0,0,0.18);
+            transition: all 0.2s ease;
+        }
+
+        .btn-search:hover  { background: #1a1a1a; box-shadow: 0 1.5cqw 4cqw rgba(0,0,0,0.28); }
+        .btn-search:active { transform: scale(0.99); }
+
+        @keyframes fadeUp {
+            from { opacity:0; transform:translateY(2cqw); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+        .header { animation: fadeUp 0.5s ease both 0.05s; opacity:0; }
+    </style>
+</head>
+<body>
+
+<div class="kiosk">
+    <div class="header">
+        <div class="header-left">
+            <button class="btn-home" onclick="goHome()">홈</button>
+            <div class="tab-bar">
+                <button class="tab active" onclick="goInfo()">호텔 안내</button>
+            </div>
+        </div>
+        <button class="btn-back" onclick="goBack()">
+            <svg class="back-icon" viewBox="0 0 24 24">
+                <path d="M11.67 3.87L9.9 2.1 0 12l9.9 9.9 1.77-1.77L3.54 12z"/>
+            </svg>
+        </button>
+    </div>
+
+    <div class="center-block">
+        <div class="page-title-bar">
+            <div class="page-title-ko">체크인</div>
+            <div class="page-title-en">CHECK-IN</div>
+        </div>
+        <div class="input-card">
+            <span class="input-label">예약 번호를 입력해 주세요.</span>
+            <div class="reservation-input-wrap">
+                <input class="input-field reservation-front" id="reservationFront"
+                       type="text" maxlength="6"
+                       data-numpad
+                       data-numpad-group="resv"
+                       data-numpad-part="front"
+                       data-numpad-next="reservationBack"
+                       readonly />
+                <span class="reservation-dash">-</span>
+                <input class="input-field reservation-back" id="reservationBack"
+                       type="text" maxlength="6"
+                       data-numpad
+                       data-numpad-group="resv"
+                       data-numpad-part="back"
+                       readonly />
+            </div>
+            <form method="post" id="reservationBtn" th:action="@{/JHotel/checkin/reservation_detail}">
+                <input type="hidden" id="hiddenReservationId" name="reservationId">
+            </form>
+            <button class="btn-search" onclick="searchReservation()">예약 조회</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="noReservationModal">
+        <div class="modal-box">
+            <span class="modal-msg">해당 정보로 조회된 예약이 없습니다.</span>
+            <div class="modal-btns" style="grid-template-columns: 1fr;">
+                <button class="btn-modal-yes" onclick="closeModal()">확 인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 예약번호 앞, 뒤 6자리 미입력 시 출력 모달 -->
+    <div class="modal-overlay hidden" id="kpAlertModal">
+        <div class="modal-box">
+            <span class="modal-msg" id="kpAlertMsg"></span>
+            <div class="modal-btns" style="grid-template-columns: 1fr;">
+                <button class="btn-modal-yes" onclick="closeKpAlert()">확 인</button>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="reservationBtn" th:action="@{/JHotel/checkin/reservation_detail}">
+        <input type="hidden" id="hiddenReservationId" name="reservationId">
+    </form>
+
+    <!-- 타임아웃 모달 -->
+    <div class="modal-overlay hidden" id="timeoutModal">
+        <div class="modal-box">
+            <p><span id="timeoutSec">10</span>초 후<br>초기 화면으로 돌아갑니다.</p>
+            <div class="modal-sub-msg">
+                계속 진행하시려면 화면을 클릭해 주세요.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/customer/header.js}"></script>
+<script th:src="@{/js/customer/numKeyboard.js}"></script>
+<script th:src="@{/js/customer/modal.js}"></script>
+<script th:src="@{/js/customer/timeout.js}"></script>
+<script>
+
+    /* 예약 조회 */
+    function searchReservation() {
+        const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+        const front = document.getElementById('reservationFront').value
+        const back  = document.getElementById('reservationBack').value
+
+        if (front.length !== 6 || back.length !== 6) {
+            document.getElementById('kpAlertMsg').textContent = '예약 번호 앞뒤 6자리를 모두 입력해 주세요.'
+            document.getElementById('kpAlertModal').classList.remove('hidden')
+            return
+        }
+
+        const reservationId = front + '-' + back
+
+        fetch('/JHotel/checkin/search?reservationId=' + reservationId)
+            .then(r => r.json())
+            .then(data => {
+                if (!data || Object.keys(data).length === 0) {
+                    document.getElementById('noReservationModal').classList.remove('hidden')
+                } else {
+                    document.getElementById('hiddenReservationId').value = reservationId
+                    document.getElementById('reservationBtn').submit()
+                }
+            })
+            .catch(() => {
+                document.getElementById('noReservationModal').classList.remove('hidden')
+            })
+    }
+
+    function closeModal()   { document.getElementById('noReservationModal').classList.add('hidden') }
+    function closeKpAlert() { document.getElementById('kpAlertModal').classList.add('hidden') }
+
+</script>
+</body>
+</html>

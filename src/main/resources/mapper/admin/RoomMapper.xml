@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hotel_kiosk.mapper.admin.RoomMapper">
+    <!-- 객실 등록 -->
+    <insert id="insertRoomMaster">
+        INSERT INTO hotel_kiosk.room_master (room_no, room_name, room_type, room_view, room_floor, base_price, max_people, bed_type, area, rating, image_url, updated_at, room_status)
+        VALUES (#{roomNo}, #{roomName}, #{roomType}, #{roomView}, left(room_no, 2), #{basePrice}, #{maxPeople}, #{bedType}, #{area}, #{rating}, #{imageUrl}, localtime, 'active');
+    </insert>
+    <insert id="insertRoomStatus">
+        INSERT INTO hotel_kiosk.room_status (room_no, current_status, updated_at)
+        VALUES (#{roomNo}, #{currentStatus}, localtime)
+    </insert>
+
+    <!-- 객실 목록 -->
+    <select id="findAllRoom" resultType="hotel_kiosk.domain.admin.RoomMaster">
+        SELECT *
+        FROM hotel_kiosk.room_master m JOIN hotel_kiosk.room_status s
+        ON m.room_no = s.room_no
+        ORDER BY m.room_no
+    </select>
+
+    <!-- 객실 조회 (이름) -->
+    <select id="findRoomByName" resultType="hotel_kiosk.domain.admin.RoomMaster">
+        SELECT *
+        FROM hotel_kiosk.room_master m JOIN hotel_kiosk.room_status s
+        ON m.room_no = s.room_no
+        WHERE m.room_name LIKE CONCAT('%', #{roomName}, '%') AND m.room_floor = #{roomFloor}
+    </select>
+    <!-- 객실 조회 (객실번호) -->
+    <select id="findRoomByNo" resultType="hotel_kiosk.domain.admin.RoomMaster">
+        SELECT *
+        FROM hotel_kiosk.room_master m JOIN hotel_kiosk.room_status s
+        ON m.room_no = s.room_no
+        WHERE m.room_no LIKE CONCAT('%', #{roomNo}, '%') AND m.room_floor = #{roomFloor}
+    </select>
+    <!-- 객실 조회 (객실번호) -->
+    <select id="findOneRoomByNo" resultType="hotel_kiosk.domain.admin.RoomMaster">
+        SELECT *
+        FROM hotel_kiosk.room_master m JOIN hotel_kiosk.room_status s
+                                            ON m.room_no = s.room_no
+        WHERE m.room_no = #{roomNo} AND m.room_floor = #{roomFloor}
+    </select>
+
+    <!-- 객실 조회 (층별) -->
+    <select id="findRoomByFloor" resultType="hotel_kiosk.domain.admin.RoomMaster">
+        SELECT *
+        FROM hotel_kiosk.room_master m JOIN hotel_kiosk.room_status s
+        ON m.room_no = s.room_no
+        WHERE m.room_floor = #{roomFloor}
+    </select>
+
+    <!-- 객실 조회 (객실 종류) -->
+    <select id="findRoomByType" resultType="hotel_kiosk.domain.admin.RoomMaster">
+        SELECT *
+        FROM hotel_kiosk.room_master m JOIN hotel_kiosk.room_status s
+        ON m.room_no = s.room_no
+        WHERE m.room_type = #{roomType} AND m.room_floor = #{roomFloor}
+    </select>
+
+    <!-- 객실 수정 -->
+    <update id="updateRoomMaster">
+        UPDATE hotel_kiosk.room_master m JOIN hotel_kiosk.room_status s
+            ON m.room_no = s.room_no
+        SET room_name = #{roomName}, room_type = #{roomType}, room_view=#{roomView}, base_price = #{basePrice}, max_people = #{maxPeople}, bed_type = #{bedType}, rating = #{rating}, s.updated_at = localtime, m.updated_at = localtime, current_status = #{currentStatus}
+        WHERE m.room_no = #{roomNo}
+    </update>
+
+    <!-- 객실 상태 수정 -->
+    <update id="updateRoomCurrentStatus">
+        UPDATE hotel_kiosk.room_status s join hotel_kiosk.room_master m ON s.room_no = m.room_no
+        SET current_status = #{currentStatus}, s.updated_at = localtime, m.updated_at = localtime
+        WHERE s.room_no = #{roomNo}
+    </update>
+
+    <!-- 객실 삭제 -->
+    <delete id="deleteRoomMaster">
+        DELETE FROM hotel_kiosk.room_master
+        WHERE room_no = #{roomNo};
+    </delete>
+    <delete id="deleteRoomStatus">
+        DELETE FROM hotel_kiosk.room_status
+        WHERE room_no = #{roomNo}
+    </delete>
+
+    <select id="findPrice">
+        SELECT base_price
+        FROM room_master
+        WHERE room_no = #{roomNo}
+    </select>
+</mapper>

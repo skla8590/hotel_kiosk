@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hotel_kiosk.mapper.admin.PolicyMapper">
+    <!-- 요금 정책 등록 -->
+    <insert id="insert">
+        INSERT INTO hotel_kiosk.pricing_policy (policy_name, repeat_type, repeat_value, start_date, end_date,
+                                                discount_rate)
+        VALUES (#{policyName}, #{repeatType}, #{repeatValue}, #{startDate}, #{endDate}, #{discountRate})
+    </insert>
+
+    <!-- 요금 정책 목록 -->
+    <select id="selectAll" resultType="hotel_kiosk.domain.admin.PricingPolicy">
+        SELECT *
+        FROM hotel_kiosk.pricing_policy
+        ORDER BY policy_id DESC
+    </select>
+
+    <!-- 시즌 요금 정책 조회 -->
+    <select id="selectSeasonPolicies" resultType="hotel_kiosk.dto.admin.PricingPolicyDTO">
+        Select *
+        FROM pricing_policy
+        WHERE policy_name != '요일 정책'
+        ORDER BY policy_id DESC
+    </select>
+
+    <!-- 요일 요금 정책 목록 -->
+    <select id="selectWeeklyPolicies" resultType="hotel_kiosk.dto.admin.PricingPolicyDTO">
+        SELECT *
+        FROM pricing_policy
+        WHERE repeat_type = 'Weekly'
+        AND policy_name = '요일 정책'
+        ORDER BY policy_id DESC
+    </select>
+
+
+    <!-- 요금 정책 조회 -->
+    <select id="selectOne" resultType="hotel_kiosk.domain.admin.PricingPolicy">
+        SELECT *
+        FROM hotel_kiosk.pricing_policy
+        WHERE policy_id = #{policyId}
+    </select>
+
+    <!-- 요금 정책 삭제 -->
+    <delete id="deleteOne">
+        DELETE
+        FROM hotel_kiosk.pricing_policy
+        WHERE policy_id = #{policyId}
+    </delete>
+
+    <!-- 요금 정책 수정 -->
+    <!-- 동적 SQL문으로 작성. test는 MariaDB 문법 상 고정 속성 이름 -->
+    <update id="update">
+        UPDATE hotel_kiosk.pricing_policy
+        <set>
+            <if test="policyName != null">
+                policy_name = #{policyName},
+            </if>
+            <if test="repeatType != null">
+                repeat_type = #{repeatType},
+            </if>
+            <if test="repeatValue != null">
+                repeat_value = #{repeatValue},
+            </if>
+            <if test="startDate != null">
+                start_date = #{startDate},
+            </if>
+            <if test="endDate != null">
+                end_date = #{endDate},
+            </if>
+            <if test="discountRate != null">
+                discount_rate = #{discountRate},
+            </if>
+        </set>
+        WHERE policy_id = #{policyId}
+    </update>
+
+    <select id="findSeasonByDate" resultType="hotel_kiosk.domain.admin.PricingPolicy">
+        SELECT *
+        FROM pricing_policy
+        WHERE repeat_type = #{repeatType}
+        AND #{date} BETWEEN start_date AND end_date
+    </select>
+
+    <select id="findWeekly" resultType="hotel_kiosk.domain.admin.PricingPolicy">
+        SELECT *
+        FROM pricing_policy
+        WHERE repeat_type = 'Weekly'
+          AND FIND_IN_SET(#{day}, repeat_value)
+        ORDER BY policy_id DESC
+        LIMIT 1
+    </select>
+</mapper>

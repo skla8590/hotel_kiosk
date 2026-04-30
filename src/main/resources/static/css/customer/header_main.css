@@ -1,0 +1,137 @@
+/* 홈 + 호텔 안내 헤더 css */
+.header {
+    padding: 3.5cqw 4cqw 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.btn-home {
+    height: 6cqw;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2.3cqw;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1.5cqw;
+    padding: 1.2cqw 2.5cqw;
+    cursor: pointer;
+    box-shadow: 0 0.3cqw 1.5cqw var(--shadow);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-home:hover {
+    border-color: var(--green);
+    color: var(--green);
+}
+
+.header-left {
+    display: flex;
+    gap: 2cqw;
+}
+
+.header-left .btn-home {
+    margin-right: 2cqw; /* [추가] 탭 바와의 간격 조정 */
+}
+
+    .btn-back {
+      width: 6cqw;
+      height: 6cqw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1.8cqw;
+      cursor: pointer;
+      box-shadow: 0 0.4cqw 1.2cqw var(--shadow);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      margin-left: auto;
+    }
+
+    .btn-back:hover {
+      background: #fff;
+      border-color: var(--green);
+      transform: translateY(-0.2cqw);
+      box-shadow: 0 0.6cqw 2cqw rgba(0, 0, 0, 0.1);
+    }
+
+    .back-icon {
+      width: 3cqw;
+      height: 3cqw;
+      stroke: var(--text);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      transition: stroke 0.2s ease;
+      transform: translateX(0.4cqw);
+    }
+
+    .btn-back:hover .back-icon {
+      stroke: var(--green);
+    }
+
+.tab {
+    height: 6cqw;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2.3cqw;
+    font-weight: 600;
+    color: var(--text-sub);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1.5cqw;
+    padding: 1.2cqw 3cqw;
+    cursor: pointer;
+    box-shadow: 0 0.3cqw 1.5cqw var(--shadow);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.tab.active {
+    background: var(--green);
+    color: #fff;
+    border-color: var(--green);
+    box-shadow: 0 0.3cqw 1.5cqw rgba(30, 77, 58, 0.35);
+}
+
+.btn-back {
+    width: 6cqw;
+    height: 6cqw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1.8cqw;
+    cursor: pointer;
+    box-shadow: 0 0.4cqw 1.2cqw var(--shadow);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-back:hover {
+    background: #fff;
+    border-color: var(--green);
+    transform: translateY(-0.2cqw);
+    box-shadow: 0 0.6cqw 2cqw rgba(0, 0, 0, 0.1);
+}
+
+.back-icon {
+    width: 3cqw;
+    height: 3cqw;
+    stroke: var(--text);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    transition: stroke 0.2s ease;
+    transform: translateX(0.4cqw);
+}
+
+.btn-back:hover .back-icon {
+    stroke: var(--green);
+}

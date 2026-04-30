@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hotel_kiosk.mapper.admin.DashboardMapper">
+    <!-- 현재 객실 수 -->
+    <select id="countRoom">
+        SELECT count(*)
+        FROM hotel_kiosk.room_master
+        WHERE room_status = 'active'
+    </select>
+
+    <!-- 현재 입실 수 -->
+    <select id="countCheckin">
+        SELECT count(*)
+        FROM hotel_kiosk.room_status
+        WHERE current_status = 'Occupied'
+    </select>
+
+    <!-- 오늘 체크인 수 -->
+    <select id="countCheckinToday">
+        SELECT count(*)
+        FROM hotel_kiosk.reservations
+        WHERE check_in_at = DATE(NOW())
+    </select>
+    <!-- 오늘 체크인 예정 수 -->
+    <select id="countReservationToday">
+        SELECT count(*)
+        FROM hotel_kiosk.reservations
+        WHERE checkin_date = DATE(NOW())
+          AND check_in_at IS NULL
+    </select>
+
+    <!-- 재고 경고 수 -->
+    <select id="countStockWarning">
+        SELECT count(*)
+        FROM hotel_kiosk.stocks
+        WHERE stock_status = 'Shortage' OR stock_status = 'Warning'
+    </select>
+
+    <!-- 재고 경보 조회 -->
+    <select id="findStockByWarning" resultType="hotel_kiosk.domain.admin.Stocks">
+        SELECT *
+        FROM hotel_kiosk.stocks
+        WHERE stock_status = 'Shortage' OR stock_status = 'Warning'
+    </select>
+
+    <!-- 예약 현황 -->
+    <select id="countReservation">
+        SELECT
+            SUM(CASE WHEN pay_status = 'Success' THEN 1 ELSE 0 END) AS Success,
+            SUM(CASE WHEN pay_status = 'Waiting' THEN 1 ELSE 0 END) AS Waiting,
+            SUM(CASE WHEN pay_status IN ('Refund', 'Failed') THEN 1 ELSE 0 END) AS cancelled
+        FROM hotel_kiosk.reservations
+    </select>
+    <!-- 객실 현황 -->
+    <select id="countRooms">
+        SELECT
+            SUM(CASE WHEN current_status = 'Available' THEN 1 ELSE 0 END) AS Available,
+            SUM(CASE WHEN current_status = 'Occupied' THEN 1 ELSE 0 END) AS Occupied,
+            SUM(CASE WHEN current_status = 'Cleaning' THEN 1 ELSE 0 END) AS Cleaning,
+            SUM(CASE WHEN current_status = 'Cleaning Required' THEN 1 ELSE 0 END) AS Cleaning_Required,
+            SUM(CASE WHEN current_status = 'Maintenance' THEN 1 ELSE 0 END) AS Maintenance
+        FROM hotel_kiosk.room_status
+    </select>
+</mapper>

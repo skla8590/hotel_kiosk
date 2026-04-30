@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{admin/layout/layout :: page(title='계정 관리', content=~{::main}, pageScript=~{::script})}">
+<head></head>
+<body>
+<main>
+
+    <div class="toolbar">
+        <div class="search-wrap">
+            <span class="ico">🔍</span>
+            <!-- 현재 검색어 유지 -->
+            <input type="text" id="acct-keyword" placeholder="계정명 / 이메일 검색"
+                   th:value="${keyword}">
+        </div>
+        <div class="seg-ctrl" id="acct-seg">
+            <!-- data-grade 속성으로 JS에서 현재 필터 복원 -->
+            <div class="seg-btn" data-grade=""
+                 th:classappend="${adminGrade == null or adminGrade == ''} ? ' active'"
+                 onclick="accounts.filterAccounts(this,'')">전체</div>
+            <div class="seg-btn" data-grade="SUPER"
+                 th:classappend="${adminGrade == 'SUPER'} ? ' active'"
+                 onclick="accounts.filterAccounts(this,'SUPER')">최고</div>
+            <div class="seg-btn" data-grade="GENERAL"
+                 th:classappend="${adminGrade == 'GENERAL'} ? ' active'"
+                 onclick="accounts.filterAccounts(this,'GENERAL')">일반</div>
+        </div>
+        <button class="btn btn-gold ml-auto" onclick="openModal('modal-acct-reg')">+ 계정 등록</button>
+    </div>
+
+    <div class="card">
+        <div class="tbl-wrap">
+            <table class="tbl">
+                <thead>
+                <tr>
+                    <th>번호</th>
+                    <th>아이디</th>
+                    <th>이메일</th>
+                    <th>권한</th>
+                    <th>상태</th>
+                    <th>상태변경</th>
+                    <th>최근 로그인</th>
+                    <th>권한 변경</th>
+                </tr>
+                </thead>
+                <tbody id="tbody-accounts">
+                <!-- Thymeleaf로 서버에서 렌더링 -->
+                <tr th:each="a, stat : ${list}">
+                    <td th:text="${stat.count}"></td>
+                    <td th:text="${a.adminId}"></td>
+                    <td th:text="${a.adminEmail}"></td>
+
+                    <td class="col-grade">
+                        <span th:class="${a.adminGrade == 'SUPER'} ? 'badge badge-gold' : 'badge badge-blue'"
+                              th:text="${a.adminGrade == 'SUPER'} ? '최고관리자' : '일반관리자'"></span>
+                    </td>
+
+                    <td>
+                        <span th:class="${a.statement == 'Working'} ? 'badge badge-green' :
+                                        (${a.statement == 'Locked'} ? 'badge badge-red' : 'badge badge-gray')"
+                              th:text="${a.statement}"></span>
+                    </td>
+
+                    <td>
+                        <select class="sel"
+                                th:data-admin-id="${a.adminId}"
+                                onchange="accounts.updateStatement(this.dataset.adminId, this.value)">
+                            <option value="Working" th:selected="${a.statement == 'Working'}">Working</option>
+                            <option value="Absence" th:selected="${a.statement == 'Absence'}">Absence</option>
+                            <option value="Leave"   th:selected="${a.statement == 'Leave'}">Leave</option>
+                            <option value="Locked"  th:selected="${a.statement == 'Locked'}">Locked</option>
+                        </select>
+                    </td>
+
+                    <td>
+                        <span th:text="${a.lastLogin != null} ? ${#temporals.format(a.lastLogin, 'yyyy-MM-dd HH:mm')} : '-'"></span>
+                    </td>
+
+                    <td>
+                        <div class="perm-toggle"
+                             th:classappend="${a.adminGrade == 'SUPER'} ? ' super'"
+                             th:data-account-id="${a.adminId}">
+                            <div class="perm-slider"></div>
+                            <div class="perm-btn super"
+                                 th:classappend="${a.adminGrade == 'SUPER'} ? ' on'"
+                                 onclick="accounts.togglePerm(this, 'SUPER')">최고</div>
+                            <div class="perm-btn general"
+                                 th:classappend="${a.adminGrade == 'GENERAL'} ? ' on'"
+                                 onclick="accounts.togglePerm(this, 'GENERAL')">일반</div>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${list == null or list.isEmpty()}">
+                    <td colspan="8" style="text-align:center; color:var(--c-gray)">계정 정보가 없습니다.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 계정 등록 모달 -->
+    <div class="overlay" id="modal-acct-reg">
+        <div class="modal modal-md">
+            <div class="modal-head">
+                <span class="modal-title">계정 등록</span>
+                <button class="modal-close" onclick="closeModal('modal-acct-reg')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <input type="hidden" id="reg-lastLogin">
+                    <div class="fg full"><label class="lbl">이름</label>
+                        <input class="inp" id="reg-username" placeholder="이름을 입력해주세요"></div>
+                    <div class="fg full"><label class="lbl">아이디</label>
+                        <input class="inp" id="reg-userId" placeholder="아이디를 입력해주세요">
+                        <div id="msg-userId" class="msg-error"></div></div>
+                    <div class="fg full">
+                        <label class="lbl">비밀번호
+                            <span style="color:var(--c-green);font-size:11px">(자동 생성)</span></label>
+                        <input class="inp" value="●●●●●●●●" readonly></div>
+                    <div class="fg full"><label class="lbl">이메일</label>
+                        <input type="email" class="inp" id="reg-email" placeholder="이메일을 입력해주세요">
+                        <div id="msg-email" class="msg-error"></div></div>
+                    <div class="fg full"><label class="lbl">연락처</label>
+                        <input class="inp" id="reg-phone" placeholder="010-0000-0000"></div>
+                    <div class="fg full">
+                        <label class="lbl">권한</label>
+                        <div style="display:flex;gap:16px">
+                            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+                                <input type="radio" name="reg-role" value="SUPER"> 최고 관리자
+                            </label>
+                            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+                                <input type="radio" name="reg-role" value="GENERAL" checked> 일반 관리자
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn btn-ghost" onclick="closeModal('modal-acct-reg')">취소</button>
+                <button class="btn btn-gold" onclick="accounts.register()">등록</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 등록 완료 - 확인 시 reload로 목록 갱신 -->
+    <div class="overlay" id="modal-acct-reg-done">
+        <div class="modal modal-sm modal-alert">
+            <div class="modal-body">
+                <span class="alert-ico">✅</span>
+                <div class="alert-msg">계정 등록 완료</div>
+                <div class="alert-sub">계정이 등록되었습니다. 이메일을 통해 비밀번호를 설정해 주세요.</div>
+            </div>
+            <div class="modal-foot" style="justify-content:center">
+                <button class="btn btn-gold" onclick="accounts.reloadAfterRegister()">확인</button>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

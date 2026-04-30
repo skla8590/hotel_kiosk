@@ -1,0 +1,101 @@
+/* 모든 파일 공통 */
+
+/* 폰트 */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Noto+Serif+KR:wght@300;400;500&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@400;600&display=swap');
+
+/* 포인트 컬러 및 공통 수치 */
+:root {
+    --green: #1e4d3a;
+    --green-light: #2a6b50;
+    --bg: #f2f0ec;
+    --surface: #ffffff;
+    --text: #1a1a1a;
+    --text-sub: #606060;
+    --border: #ddd;
+    --shadow: rgba(0, 0, 0, 0.08);
+    --red:         #c0392b;
+    --red-dark:    #a93226;
+    --teal:        #00bcd4;
+    --teal-dark:   #0097a7;
+    --red-price:   #e53935;
+    --blue-price:  #1565c0;
+    --gold:       #b8972e;
+    --gold-light: #f5f0d8;
+    --light-green: #55BA90FF;
+    --icon-size: 9cqw;
+    --icon-gap:  2cqw;
+    --btn-px:    4cqw;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    min-height: 100dvh;
+    background: #e8e5e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Montserrat', sans-serif;
+    overflow: hidden;
+}
+
+/* 9:16 키오스크 프레임 */
+.kiosk {
+    /* 기기 비율 유지 (너비 = 높이의 9/16, 높이 = 너비의 16/9) */
+    width: min(100vw, 100dvh * 9 / 16);
+    height: min(100dvh, 100vw * 16 / 9);
+    background: var(--bg);
+    border-radius: clamp(0px, 2vmin, 20px);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    position: relative;
+
+    /* 내부 요소들이 키오스크 크기에 반응하도록 cqw 단위 사용 */
+    container-type: size;
+    container-name: kiosk;
+}
+
+
+
+/* 테스트 공지 박스 (키오스크 화면 외부) */
+#testNotice {
+    position: fixed;
+    left: calc(50% + (min(100vw, 100dvh * 9 / 16) / 2) + 40px);
+    top: 50px;
+    width: 280px;
+    background: #ffffff;
+    border: 2px solid #1e4d3a;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    display: block !important;
+}
+
+/* 리스트 스타일 */
+#testNotice h3 {
+    font-size: 18px;
+    color: #1e4d3a;
+    margin: 0 0 12px 0;
+}
+
+#testNotice ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#testNotice li {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #333;
+}

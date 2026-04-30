@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Kiosk - 호텔 안내</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" th:href="@{/css/customer/kiosk.css}"> <!-- 공통 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/header_main.css}"> <!-- 메인 헤더 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/top_title.css}"> <!-- 최상단 타이틀 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/modal.css}">
+
+    <style>
+        .kiosk {
+            display: grid;
+            grid-template-rows: auto auto 1fr auto;
+        }
+
+        /* ── 스크롤 콘텐츠 ── */
+        .content-area {
+            overflow-y: auto;
+            scrollbar-width: none;
+            padding: 3cqw 4cqw 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5cqw;
+            animation: fadeUp 0.4s ease both 0.15s;
+            opacity: 0;
+        }
+
+        .content-area::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* ── 메인 카드 (타이틀 + 객실 정보) ── */
+        .main-card {
+            background: var(--surface);
+            border-radius: 2cqw;
+            border: 1px solid var(--border);
+            box-shadow: 0 0.5cqw 2.5cqw var(--shadow);
+            padding: 3cqw;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5cqw;
+            flex-shrink: 0;
+        }
+
+        /* 타이틀 */
+        .main-card-title {
+            text-align: center;
+        }
+
+        .page-title-ko {
+            font-family: 'Playfair Display', serif;
+            font-size: 5cqw;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: 0.05em;
+        }
+
+        .page-title-en {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2.2cqw;
+            font-weight: 600;
+            color: var(--text-sub);
+            letter-spacing: 0.2em;
+            margin-top: 0.5cqw;
+        }
+
+        /* 객실 사진 + 정보 */
+        .room-detail-row {
+            display: grid;
+            grid-template-columns: 2fr 3fr;
+            gap: 3cqw;
+            align-items: start;
+        }
+
+        .room-photo {
+            aspect-ratio: 1 / 1;
+            background: #ececec;
+            border-radius: 1.5cqw;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .room-photo-label {
+            font-size: 2.4cqw;
+            color: var(--text-sub);
+        }
+
+        .room-info-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2cqw;
+        }
+
+        .room-info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .room-name {
+            font-size: 3.4cqw;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .room-rating-label {
+            font-size: 2.4cqw;
+            font-weight: 600;
+            color: var(--text-sub);
+        }
+
+        .room-rating {
+            font-size: 2.4cqw;
+            font-weight: 600;
+            color: #d35811;
+        }
+
+        .room-summary {
+            margin: 2cqw;
+            font-size: 3cqw;
+            justify-content: center;
+            text-align: center;
+            white-space: pre-line;
+            color: #504e4e;
+        }
+
+        .room-size, .room-amenity {
+            font-size: 2.4cqw;
+            color: var(--text-sub);
+            line-height: 1.5;
+        }
+
+        #room-price-row {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 4cqw;
+            font-weight: 700;
+            color: var(--blue-price);
+            display: block;
+            text-align: right;
+        }
+
+        .room-price-label {
+            font-size: 2.2cqw;
+            font-weight: 400;
+            color: var(--text-sub);
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 1cqw;
+        }
+
+        /* ── 옵션 카드 ── */
+        .options-card {
+            background: var(--surface);
+            border-radius: 2cqw;
+            border: 1px solid var(--border);
+            box-shadow: 0 0.5cqw 2.5cqw var(--shadow);
+            padding: 2.5cqw;
+            flex-shrink: 0;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2cqw;
+        }
+
+        /* 1열 full 옵션 */
+        .option-item.full {
+            grid-column: 1 / -1;
+        }
+
+        .option-item {
+            background: var(--bg);
+            border-radius: 1.5cqw;
+            border: 1px solid var(--border);
+            padding: 2cqw 2.5cqw;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5cqw;
+        }
+
+        .option-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .option-name {
+            font-size: 2.6cqw;
+            font-weight: 500;
+            color: var(--text);
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .option-name-sub {
+            font-size: 2cqw;
+            font-weight: 300;
+            color: var(--text-sub);
+            margin-top: 0.3cqw;
+            line-height: 1.3;
+        }
+
+        .option-price {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2.2cqw;
+            font-weight: 500;
+            color: var(--text-sub);
+            margin-top: 0.3cqw;
+        }
+
+        /* 수량 조절 */
+        .qty-ctrl {
+            display: flex;
+            align-items: center;
+            gap: 1cqw;
+            flex-shrink: 0;
+        }
+
+        .qty-btn {
+            width: 4.5cqw;
+            height: 4.5cqw;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.8cqw;
+            font-size: 3cqw;
+            font-weight: 400;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .qty-btn:hover {
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        .qty-btn:active {
+            transform: scale(0.92);
+        }
+
+        .qty-val {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3cqw;
+            font-weight: 600;
+            color: var(--text);
+            min-width: 3cqw;
+            text-align: center;
+        }
+
+        /* ── 하단 고정 ── */
+        .footer {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 2.5cqw 4cqw 3.5cqw;
+            display: flex;
+            flex-direction: column;
+            gap: 1.8cqw;
+            animation: fadeUp 0.4s ease both 0.35s;
+            opacity: 0;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .summary-label {
+            font-size: 2.8cqw;
+            font-weight: 400;
+            color: var(--text);
+        }
+
+        .summary-value {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2.8cqw;
+            font-weight: 500;
+            color: var(--text-sub);
+        }
+
+        .summary-value.positive {
+            color: var(--red);
+        }
+
+        .summary-total-label {
+            font-size: 3.2cqw;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .summary-total-value {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 4cqw;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        .footer-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2cqw;
+        }
+
+        .btn-add-room {
+            font-size: 3.5cqw;
+            font-weight: 500;
+            color: #fff;
+            background: #2e2e2e;
+            border: none;
+            border-radius: 1.8cqw;
+            padding: 3cqw;
+            cursor: pointer;
+            box-shadow: 0 0.5cqw 2cqw rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .btn-add-room:hover {
+            background: #1a1a1a;
+        }
+
+        .btn-add-room:active {
+            transform: scale(0.99);
+        }
+
+        .btn-direct-reserve {
+            font-size: 3.5cqw;
+            font-weight: 500;
+            color: #fff;
+            background: var(--red);
+            border: none;
+            border-radius: 1.8cqw;
+            padding: 3cqw;
+            cursor: pointer;
+            letter-spacing: 0.04em;
+            box-shadow: 0 0.5cqw 2cqw rgba(192, 57, 43, 0.35);
+            transition: all 0.2s ease;
+        }
+
+        .btn-direct-reserve:hover {
+            background: var(--red-dark);
+        }
+
+        .btn-direct-reserve:active {
+            transform: scale(0.99);
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(2cqw);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+</head>
+<body>
+
+<div class="kiosk">
+
+    <!-- 상단 네비 -->
+    <div class="header">
+        <div class="header-left">
+            <button class="btn-home" onclick="goHome()">홈</button>
+            <div class="tab-bar">
+                <button class="tab active">호텔 안내</button>
+            </div>
+        </div>
+
+        <button class="btn-back" onclick="goBack()">
+            <svg class="back-icon" viewBox="0 0 24 24">
+                <path d="M11.67 3.87L9.9 2.1 0 12l9.9 9.9 1.77-1.77L3.54 12z" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- 페이지 타이틀 바 -->
+    <div class="page-title-bar">
+        <div class="page-title-ko">객실 옵션 추가</div>
+        <div class="page-title-en">ROOM OPTION SELECTION</div>
+    </div>
+
+    <div class="content-area">
+
+        <!-- 타이틀 + 객실 정보 카드 -->
+        <div class="main-card">
+            <div class="room-detail-row">
+                <div class="room-photo">
+                    <span class="room-photo-label">객실 사진</span>
+                </div>
+                <div class="room-info-col">
+                    <div class="room-info-header">
+                        <span class="room-name"></span>
+                        <div class="room-rating-label">
+                            <span class="room-rating"></span> / 5.0
+                        </div>
+                    </div>
+                    <div class="room-summary">객실 요약 정보</div>
+                    <div class="room-size"></div>
+                    <div class="room-amenity">구비 시설</div>
+                    <div class="room-price-label">
+                        <span id="room-price-row">객실 숙박 요금</span> / 박
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 옵션 카드 -->
+        <div class="options-card">
+            <div class="options-grid" id="optionsGrid"></div>
+        </div>
+
+    </div>
+
+    <!-- 하단 고정 -->
+    <div class="footer">
+        <div class="summary-row">
+            <span class="summary-label">옵션 금액</span>
+            <span class="summary-value positive" id="optionAmt">+0원</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-total-label">총 금액</span>
+            <span class="summary-total-value" id="totalAmt">180,000원</span>
+        </div>
+        <div class="footer-btns">
+            <button class="btn-add-room" onclick="goBack()">날짜 재선택</button>
+            <button class="btn-direct-reserve" onclick="directReserve()">객실 연장</button>
+        </div>
+    </div>
+
+    <!-- 모달 -->
+    <div class="modal-overlay hidden" id="noRoomsModal">
+        <div class="modal-box">
+            <span class="modal-msg" style="white-space: pre-line;"></span>
+            <div class="modal-btns" style="grid-template-columns: 1fr;">
+                <button class="btn-modal-yes" onclick="closeModal('noRoomsModal')">확 인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 타임아웃 모달 -->
+    <div class="modal-overlay hidden" id="timeoutModal">
+        <div class="modal-box">
+            <p><span id="timeoutSec">10</span>초 후<br>메인 화면으로 돌아갑니다.</p>
+            <div class="modal-sub-msg">
+                계속 진행하시려면 화면을 클릭해 주세요.
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script th:src="@{/js/customer/header.js}"></script>
+<script th:src="@{/js/customer/modal.js}"></script>
+<script th:src="@{/js/customer/timeout.js}"></script>
+<script>
+    /* 뒤로가기로 접근(BFCache 복원)시, 애니메이션 효과 재실행 */
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) {
+            const animated = document.querySelectorAll(
+                '.content-area, .footer'
+            )
+
+            animated.forEach(el => {
+                el.style.animation = 'none'
+                el.style.opacity = '0'
+
+                el.offsetHeight
+
+                el.style.animation = ''
+                el.style.opacity = ''
+            })
+        }
+    })
+
+    /* 객실 상세 정보 */
+    const roomDescription = ({
+        '1101': '" 합리적인 가격으로 즐기는\n도심 속 깔끔한 휴식 공간 "',
+        '1102': '" 여유로운 공간에서 누리는\n쾌적한 비즈니스 및 커플 객실 "',
+        '1103': '" 친구, 연인과 함께 누리는\n최고의 파노라마 오션 뷰 객실 "',
+        '1104': '" 푸른 산의 정취가 어우러진\n아늑하고 편안한 힐링 공간 "',
+        '1105': '" 탁 트인 바다 전망과\n여유로운 공간을 갖춘 인기 객실 "',
+        '1201': '" 고층에서 내려다보는 시티 뷰와\n편안하고 넉넉한 퀸 베드의 조화 "',
+        '1202': '" 킹 사이즈 베드와 넓은 공간으로\n여유로운 도심 휴양을 즐기는 객실 "',
+        '1203': '" 넉넉한 킹 베드에서 즐기는\n초록빛 마운틴 뷰 힐링 스테이 "',
+        '1204': '" 넉넉한 베드 구성으로\n함께하기 좋은 바다 앞 객실 "',
+        '1205': '" 넓은 킹 베드에 누워 감상하는\n호텔 최고 평점의 명품 오션 뷰 "',
+        '1301': '" 온 가족이 편안하게 머무는\n4인 가족 맞춤 객실 "',
+        '1302': '" 4인 가족에게 적합한\n품격있는 최고의 산 전망 스위트 "',
+        '1303': '" 고요한 호수 전망과\n럭셔리한 객실이 만든 휴식의 완성 "',
+        '1304': '" 최고급 사양의 킹 베드 2개와\n끝없는 바다가 펼쳐진 프리미엄 공간 "',
+        '1401': '" 최고의 전망과 최대 규모를 자랑하는\n단독 층의 럭셔리 오션 스위트 "'
+    })
+    const selectedRoomArr = JSON.parse(sessionStorage.getItem('selectedRooms'))
+    const selectedRoom = selectedRoomArr[0].room
+    const preReservation = JSON.parse(sessionStorage.getItem('reservation'))
+    const guestInfo = JSON.parse(sessionStorage.getItem('guestInfo'))
+    const newCheckoutDate = sessionStorage.getItem('newCheckoutDate')
+    sessionStorage.setItem('paySource', 'extended')
+
+    const diffTime = new Date(newCheckoutDate) - new Date(preReservation.checkoutDate);
+    const period = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+    document.querySelector('.room-photo').innerHTML =
+        `<img src="${selectedRoom.imageUrl}" alt="${selectedRoom.roomName}"
+          style="width:100%; height:100%; object-fit:cover; border-radius:1.5cqw;">`;
+
+    document.querySelector('.room-name').textContent = selectedRoom.roomName
+    document.querySelector('.room-rating').textContent = selectedRoom.rating
+
+    const description = roomDescription[selectedRoom.roomNo] || ''
+    document.querySelector('.room-summary').textContent = description
+    document.querySelector('.room-size').textContent = selectedRoom.area + '㎡ / ' + selectedRoom.bedType + ' / 최대 ' + selectedRoom.maxPeople + '명'
+    document.getElementById('room-price-row').textContent = '₩ ' + selectedRoom.basePrice.toLocaleString()
+
+    const totalAmt = selectedRoom.basePrice * period
+    document.getElementById('totalAmt').textContent = totalAmt.toLocaleString() + '원'
+
+    /* 객실 옵션 목록 렌더링 */
+    function renderOptions() {
+        const grid = document.getElementById('optionsGrid');
+        let html = ''
+
+        for (var i = 0; i < options.length; i++) {
+            var o = options[i]
+            html += `
+            <div class="option-item">
+                <div class="option-info">
+                    <div class="option-name">${o.optionName}</div>
+                    <div class="option-price">₩${o.optionPrice.toLocaleString()} / 인</div>
+                </div>
+                <div class="qty-ctrl">
+                    <button class="qty-btn" onclick="changeQty('${o.optionName}', ${o.optionId}, ${o.optionPrice}, -1)">−</button>
+                    <span class="qty-val" id="qty-${o.optionId}">0</span>
+                    <button class="qty-btn" onclick="changeQty('${o.optionName}', ${o.optionId}, ${o.optionPrice}, 1)">+</button>
+                </div>
+            </div>
+        `
+        }
+        grid.innerHTML = html
+    }
+
+    fetch('/JHotel/onsite/api/options')
+        .then(res => res.json())
+        .then(function (data) {
+            options = data;
+            renderOptions(options)
+
+            // 기존 옵션 수량 복원 (checking에서 되돌아왔을 때)
+            let selectedRooms = JSON.parse(sessionStorage.getItem('selectedRooms') || '[]')
+            for (let i = 0; i < selectedRooms.length; i++) {
+                if (selectedRooms[i].room.roomNo === selectedRoom.roomNo) {
+                    optionsQty = selectedRooms[i].optionsQty
+                    for (let id in optionsQty) {
+                        const qty = document.getElementById(`qty-${id}`)
+                        if (qty) qty.textContent = optionsQty[id].qty
+                    }
+                    updateSummary()
+                    break
+                }
+            }
+        })
+
+    /* 옵션 수량 설정 */
+    var optionsQty = {}
+
+    function changeQty(optionName, optionId, optionPrice, inputCount) {
+        // +, - 버튼 클릭에 따른 수량 표시
+        let qtyVal = document.getElementById(`qty-${optionId}`)
+        let currentQty = parseInt(qtyVal.textContent)
+        currentQty += inputCount
+        if (currentQty < 0) currentQty = 0
+        qtyVal.textContent = currentQty
+
+        // 옵션 내용 저장
+        optionsQty[optionId] = {optionName: optionName, qty : currentQty, optionPrice : optionPrice}
+
+        updateSummary()
+    }
+
+    /* 옵션가 포함 총 금액 계산 */
+    function updateSummary() {
+        let optionTotal = 0
+        for (const id in optionsQty) {
+            optionTotal += optionsQty[id].qty * optionsQty[id].optionPrice
+        }
+        const roomPrice = selectedRoom.basePrice * period
+        let total = roomPrice + optionTotal
+
+        document.getElementById('optionAmt').textContent = '+' + optionTotal.toLocaleString() + '원';
+        document.getElementById('totalAmt').textContent = total.toLocaleString() + '원';
+    }
+
+    /* 연장 확정 */
+    function directReserve() {
+        // 1. selectedRooms 정보 정리 (/pay로 넘어갈 정보)
+        let selectedRooms = JSON.parse(sessionStorage.getItem('selectedRooms'))
+
+        if (selectedRooms && selectedRooms.length > 0) {
+            selectedRooms[0].optionsQty = optionsQty // 사용자가 담은 옵션 저장
+        }
+
+        sessionStorage.setItem('selectedRooms', JSON.stringify(selectedRooms))
+
+        window.location.href = '/JHotel/pay'
+    }
+
+</script>
+</body>
+</html>

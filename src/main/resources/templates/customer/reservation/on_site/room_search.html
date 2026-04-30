@@ -1,0 +1,325 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Hotel Kiosk</title>
+    <link rel="stylesheet" th:href="@{/css/customer/kiosk.css}"> <!-- 공통 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/2action_btns.css}"> <!-- 메인 버튼 2개 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/header_main.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/top_title.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/flatpickrCalendar.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/modal.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/numKeyboard.css}">
+
+    <!-- flatpickr 라이브러리 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+
+    <style>
+        .kiosk {
+            display: grid;
+            grid-template-rows: auto auto 1fr auto;
+            position: relative;
+        }
+
+        .page-title-bar {
+            margin-top: 10cqw;
+        }
+
+        .content-area {
+            margin: 3cqw 4cqw 0;
+            overflow-y: auto;
+            scrollbar-width: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5cqw;
+            animation: fadeUp 0.4s ease both 0.25s;
+            opacity: 0;
+        }
+
+        .content-area::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* ── 카드 ── */
+        .card {
+            background: var(--surface);
+            border-radius: 2cqw;
+            border: 1px solid var(--border);
+            box-shadow: 0 0.5cqw 2.5cqw var(--shadow);
+            padding: 5cqw 3.5cqw;
+            flex-shrink: 0;
+            margin-top: 2cqw
+        }
+
+        .card-title {
+            font-size: 3.8cqw;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 2.5cqw;
+        }
+
+        /* ── 인원 ── */
+        .guest-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5cqw;
+            padding: 1cqw 0;
+        }
+
+        .guest-count {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 6cqw;
+            font-weight: 600;
+            color: var(--text);
+            min-width: 8cqw;
+            text-align: center;
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 12cqw;
+            caret-color: transparent;
+        }
+
+        .btn-guest {
+            width: 9cqw;
+            height: 9cqw;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 1.5cqw;
+            font-size: 5cqw;
+            font-weight: 300;
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0.3cqw 1.5cqw var(--shadow);
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .btn-guest:hover {
+            border-color: var(--green);
+            color: var(--green);
+            background: #fff;
+        }
+
+        .btn-guest:active {
+            transform: scale(0.95);
+        }
+
+        /* ── 하단 버튼 ── */
+        .footer {
+            padding: 3cqw 4cqw 4cqw;
+            animation: fadeUp 0.4s ease both 0.35s;
+            opacity: 0;
+        }
+
+        .btn-confirm {
+            width: 100%;
+            font-size: 4.2cqw;
+            font-weight: 500;
+            color: #fff;
+            background: #2e2e2e;
+            border: none;
+            border-radius: 2cqw;
+            padding: 3.5cqw;
+            cursor: pointer;
+            letter-spacing: 0.06em;
+            box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .btn-confirm:hover {
+            background: #1a1a1a;
+        }
+
+        .btn-confirm:active {
+            transform: scale(0.99);
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(2cqw);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="kiosk">
+
+    <!-- 상단 네비 -->
+    <div class="header">
+        <div class="header-left">
+            <button class="btn-home" onclick="goHome()">홈</button>
+            <div class="tab-bar">
+                <button class="tab active" onclick="goInfo()">호텔 안내</button>
+            </div>
+        </div>
+
+        <button class="btn-back" onclick="goBack()">
+            <svg class="back-icon" viewBox="0 0 24 24">
+                <path d="M11.67 3.87L9.9 2.1 0 12l9.9 9.9 1.77-1.77L3.54 12z" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="page-title-bar">
+        <div class="page-title-ko">객실 검색</div>
+        <div class="page-title-en">ROOM SEARCH</div>
+    </div>
+
+    <div class="content-area">
+
+        <!-- 숙박 날짜 카드 -->
+        <div class="card">
+            <div class="card-title">숙박 날짜</div>
+            <div class="calendar-wrap">
+                <div id="kiosk-calendar-container">
+                    <div id="kiosk-calendar"></div>
+                </div>
+
+                <input type="hidden" id="checkinDate">
+                <input type="hidden" id="checkoutDate">
+            </div>
+        </div>
+
+        <!-- 인원 카드 -->
+        <div class="card">
+            <div class="card-title">인원</div>
+            <div class="guest-row">
+                <button class="btn-guest" onclick="changeGuest(-1)">−</button>
+                <input type="text"
+                       class="guest-count"
+                       id="guestCount"
+                       value="2"
+                       readonly
+                       data-numpad
+                       maxlength="2">
+                <button class="btn-guest" onclick="changeGuest(1)">+</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        <button class="btn-confirm" onclick="confirmRoom()">객실 확인</button>
+    </div>
+
+    <!-- 빈 값 알림용 -->
+    <div class="modal-overlay hidden" id="noDateModal">
+        <div class="modal-box">
+            <span class="modal-msg">숙박 기간을 선택해 주세요.</span>
+            <div class="modal-btns" style="grid-template-columns: 1fr;">
+                <button class="btn-modal-yes" onclick="closeModal('noDateModal')">확 인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 타임아웃 모달 -->
+    <div class="modal-overlay hidden" id="timeoutModal">
+        <div class="modal-box">
+            <p><span id="timeoutSec">10</span>초 후<br>메인 화면으로 돌아갑니다.</p>
+            <div class="modal-sub-msg">
+                계속 진행하시려면 화면을 클릭해 주세요.
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script th:src="@{/js/customer/header.js}"></script>
+<script th:src="@{/js/customer/flatpickrCalendar.js}"></script>
+<script th:src="@{/js/customer/modal.js}"></script>
+<script th:src="@{/js/customer/timeout.js}"></script>
+<script th:src="@{/js/customer/numKeyboard.js}"></script>
+<script>
+    /* 뒤로가기로 접근(BFCache 복원)시, 애니메이션 효과 재실행 */
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) {
+            const animated = document.querySelectorAll(
+                '.footer, .content-area'
+            );
+
+            animated.forEach(el => {
+                el.style.animation = 'none'
+                el.style.opacity = '0'
+
+                el.offsetHeight;
+
+                el.style.animation = '';
+                el.style.opacity = '';
+            });
+        }
+    });
+
+    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+    /* 이전 선택 정보 초기화 (세션에 저장된 정보 모두 초기화) */
+    sessionStorage.removeItem('selectedRooms')
+    sessionStorage.removeItem('selectedRoom')
+    sessionStorage.removeItem('checkinDate')
+    sessionStorage.removeItem('checkoutDate')
+    sessionStorage.removeItem('regPeople')
+    sessionStorage.removeItem('guestInfo')
+
+    /* 인원 설정 */
+    function changeGuest(inputCount) {
+        const guestCount = document.getElementById('guestCount');
+        let currentCount = parseInt(guestCount.value);
+        let newCount = currentCount + inputCount;
+
+        if (newCount < 1 || newCount > 99) {
+            return;
+        }
+
+        guestCount.value = newCount;
+    }
+
+    /* <객실 확인> 버튼 눌렀을 때 room_selection 화면에 정보 전달 */
+    function confirmRoom() {
+        const checkinDate = document.getElementById('checkinDate').value;
+        const checkoutDate = document.getElementById('checkoutDate').value;
+        const regPeople = document.getElementById('guestCount').value;
+
+        // 숙박 기간 미설정 시
+        if (!checkinDate || !checkoutDate || checkinDate === checkoutDate) {
+            openModal('noDateModal');
+            return;
+        }
+
+        fetch('/JHotel/onsite/rooms', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json',  [csrfHeader]: csrfToken},
+            body: JSON.stringify({checkinDate, checkoutDate, regPeople: parseInt(regPeople)})
+        })
+            .then(res => res.json())
+            .then(rooms => {
+                sessionStorage.setItem('rooms', JSON.stringify(rooms));
+                sessionStorage.setItem('checkinDate', checkinDate);
+                sessionStorage.setItem('checkoutDate', checkoutDate);
+                sessionStorage.setItem('regPeople', regPeople);
+                window.location.href = '/JHotel/onsite/selection';
+            })
+    }
+
+    function goBack() {
+        window.location.href = "/JHotel/reservation"
+    }
+
+</script>
+</body>
+</html>

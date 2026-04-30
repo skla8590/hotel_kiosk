@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout/layout :: page(title='환불 처리', content=~{::main}, pageScript=~{::script})}">
+<head></head>
+<body>
+<main>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="ico">🔍</span>
+      <input type="text" id="rf-keyword" placeholder="예약번호 / 고객명 검색">
+    </div>
+    <select id="rf-status-filter" class="flt-select"
+            onchange="refund.load(this.value)">
+      <option value="">전체 상태</option>
+      <option value="PENDING">대기</option>
+      <option value="DONE">완료</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>예약번호</th><th>고객명</th><th>객실</th>
+            <th>취소일</th><th>결제금액</th><th>환불금액</th>
+            <th>상태</th><th>처리</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-refunds">
+          <tr th:each="r : ${refunds}">
+            <td class="fw700" th:text="${r.reservationId}">R2026-000308</td>
+            <td th:text="${r.guestName}">박수진</td>
+            <td th:text="${r.room_no}">1305</td>
+            <td th:text="${r.cancelDate}">03/10</td>
+            <td th:text="'₩' + ${#numbers.formatInteger(r.paidAmount,1,'COMMA')}">₩200,000</td>
+            <td th:style="${r.status == 'DONE'} ? 'color:var(--c-green);font-weight:700' : 'color:var(--c-red);font-weight:700'"
+                th:text="'₩' + ${#numbers.formatInteger(r.refundAmount,1,'COMMA')}">₩180,000</td>
+            <td>
+              <span class="badge"
+                    th:classappend="${r.status == 'DONE'} ? 'badge-green' : 'badge-yellow'"
+                    th:text="${r.status == 'DONE'} ? '완료' : '대기'">대기</span>
+            </td>
+            <td>
+              <button th:if="${r.status != 'DONE'}"
+                      class="btn btn-success btn-xs"
+                      th:onclick="'refund.openRefundModal(\'' + ${r.id} + '\')'">처리</button>
+              <button th:if="${r.status == 'DONE'}"
+                      class="btn btn-ghost btn-xs">내역</button>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(refunds)}">
+            <td colspan="8" style="text-align:center;padding:28px;color:var(--c-txt-3)">환불 내역이 없습니다.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 환불 처리 모달 -->
+  <div class="overlay" id="modal-refund">
+    <div class="modal modal-md">
+      <div class="modal-head">
+        <span class="modal-title">환불 처리</span>
+        <button class="modal-close" onclick="closeModal('modal-refund')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="refund-summary">
+          <div class="rs-row"><span class="rl">예약번호</span><span class="rv" id="rf-id"></span></div>
+          <div class="rs-row"><span class="rl">고객명</span>  <span class="rv" id="rf-guest"></span></div>
+          <div class="rs-row"><span class="rl">객실</span>    <span class="rv" id="rf-room"></span></div>
+          <div class="rs-row"><span class="rl">취소일</span>  <span class="rv" id="rf-date"></span></div>
+          <div class="rs-row"><span class="rl">결제금액</span><span class="rv" id="rf-paid"></span></div>
+          <hr class="rs-divider">
+          <div class="rs-row rs-total"><span class="rl">환불금액</span><span class="rv" id="rf-amount"></span></div>
+        </div>
+        <div class="fg" style="margin-bottom:14px">
+          <label class="lbl">환불 정책 안내</label>
+          <div style="background:var(--c-surface-2);border:1px solid var(--c-border);
+                      border-radius:var(--r-sm);padding:12px 14px;font-size:12.5px;color:var(--c-txt-2);line-height:1.8">
+            · 체크인 7일 전: 100% 환불 &nbsp;· 체크인 3일 전: 70% 환불<br>
+            · 체크인 1일 전: 50% 환불 &nbsp;&nbsp;· 당일 취소: 환불 불가
+          </div>
+        </div>
+        <div class="fg">
+          <label class="lbl">환불 사유</label>
+          <select class="sel" id="refund-reason">
+            <option value="CUSTOMER">고객 요청 취소</option>
+            <option value="ERROR">예약 오류</option>
+            <option value="FACILITY">시설 문제</option>
+            <option value="ETC">기타</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost"   onclick="closeModal('modal-refund')">취소</button>
+        <button class="btn btn-success" onclick="refund.approve(currentRefundId)">환불 승인</button>
+      </div>
+    </div>
+  </div>
+
+  <script>let currentRefundId = null;</script>
+</main>
+</body>
+</html>

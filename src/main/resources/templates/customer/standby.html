@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Kiosk</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" th:href="@{/css/customer/kiosk.css}"> <!-- 공통 css -->
+
+    <style>
+        .kiosk {
+            /* 기존 grid 설정을 flex로 강제 변경하여 중앙 정렬 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ── CENTER: 호텔명 + 버튼 + 설명 바 ── */
+        .center-block {
+            width: 85%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 auto;
+        }
+
+        /* ── BOTTOM: 설명 바 ── */
+        .status-bar {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1.8cqw;
+            padding: 4cqw 2cqw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5cqw;
+            box-shadow: 0 0.3cqw 1.5cqw var(--shadow);
+        }
+
+        .status-dot {
+            width: 1.5cqw;
+            height: 1.2cqw;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 0 0.4cqw rgba(30, 77, 58, 0.2);
+            animation: pulse 2.5s infinite;
+            margin-bottom: 1cqw;
+        }
+
+        .status-text {
+            display: block;
+            font-size: 3.2cqw;
+            font-weight: 500;
+            color: var(--text);
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        #description-text {
+            font-size: 2.4cqw;
+            font-weight: 300;
+            color: var(--text-sub);
+            opacity: 0.8;
+        }
+
+        /* 슬라이드쇼 래퍼 */
+        .bg-slideshow {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
+
+        /* 각 슬라이드 */
+        .bg-slide {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out; /* 페이드 전환 시간 */
+        }
+
+        .bg-slide.active {
+            opacity: 1;
+        }
+
+        /* 어두운 오버레이 (투명도 조절로 밝기 조정) */
+        .bg-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        /* 콘텐츠가 배경 위에 오도록 */
+        .center-block {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 배경이 생겼으니 status-bar 배경 반투명 처리 (선택) */
+        .status-bar {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        /* 텍스트도 흰색으로 (배경이 어두워졌으니) */
+        .status-text {
+            color: #ffffff;
+        }
+
+        #description-text {
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .status-dot {
+            background: #ffffff;
+            box-shadow: 0 0 0 0.4cqw rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0.4cqw rgba(30, 77, 58, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 0 0.8cqw rgba(30, 77, 58, 0.08);
+            }
+        }
+
+        /* 입장 애니메이션 */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(2cqw);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-1cqw);
+            }
+        }
+
+        .status-bar {
+            animation:
+                    fadeUp 0.5s ease both 0.45s,  /* 기존 입장 애니메이션 */
+                    float 3.5s ease-in-out infinite 1s;  /* 둥둥 효과, 1초 딜레이 후 시작 */
+        }
+    </style>
+</head>
+<body>
+
+<div class="kiosk">
+    <!-- 배경 슬라이드쇼 레이어 -->
+    <div class="bg-slideshow">
+        <div class="bg-slide active" th:style="'background-image: url(' + @{/img/lobby.jpeg} + ')'"></div>
+        <div class="bg-slide" th:style="'background-image: url(' + @{/img/room.jpeg} + ')'"></div>
+        <div class="bg-slide" th:style="'background-image: url(' + @{/img/bar.jpeg} + ')'"></div>
+        <div class="bg-slide" th:style="'background-image: url(' + @{/img/pool.jpeg} + ')'"></div>
+        <div class="bg-slide" th:style="'background-image: url(' + @{/img/rounge.jpeg} + ')'"></div>
+    </div>
+
+    <!-- 배경 어둡게 하는 오버레이 -->
+    <div class="bg-overlay"></div>
+
+    <div class="center-block">
+        <div class="status-bar">
+            <div class="status-dot"></div>
+            <span class="status-text" id="status-text">시작하시려면 터치해 주세요.</span>
+            <span class="status-text" id="description-text">Tap to Start</span>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const slides = document.querySelectorAll('.bg-slide');
+    let current = 0;
+
+    function nextSlide() {
+        slides[current].classList.remove('active');
+        current = (current + 1) % slides.length;
+        slides[current].classList.add('active');
+    }
+
+    setInterval(nextSlide, 5000);
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const kiosk = document.querySelector('.kiosk')
+        kiosk.addEventListener('click', function () {
+            window.location.href = '/JHotel/main'
+        })
+    })
+</script>
+</body>
+</html>

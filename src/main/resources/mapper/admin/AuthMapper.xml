@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hotel_kiosk.security.AuthMapper">
+    <!-- 관리자 인증 -->
+    <select id="findByAdminId" resultType="hotel_kiosk.domain.admin.Admin">
+        SELECT *
+        FROM admin
+        WHERE admin_id = #{adminId}
+    </select>
+
+    <!-- 관리자 아이디 존재 여부 -->
+    <select id="existsById" resultType="int">
+        SELECT COUNT(*)
+        FROM admin
+        WHERE admin_id = #{adminId}
+    </select>
+
+    <!-- 관리자 이메일 존재 여부 -->
+    <select id="existsByEmail" resultType="int">
+        SELECT COUNT(*)
+        FROM admin
+        WHERE admin_email = #{adminEmail}
+    </select>
+
+    <!-- 최고 관리자 연락처 조회 -->
+    <select id="findSuperAdminPhone" resultType="java.lang.String">
+        SELECT admin_phone
+        FROM admin
+        WHERE admin_grade = 'SUPER'
+        LIMIT 1
+    </select>
+
+    <!-- 로그인 실패 횟수 증가 -->
+    <update id="increaseFailCount">
+        UPDATE admin
+        SET fail_count = fail_count + 1
+        WHERE admin_id = #{adminId}
+    </update>
+
+    <!-- 로그인 실패 횟수 조회 -->
+    <select id="findFailCount" resultType="java.lang.Integer">
+        SELECT fail_count
+        FROM admin
+        WHERE admin_id = #{adminId}
+    </select>
+
+    <!-- 관리자 계정 잠금 -->
+    <update id="lockAdmin">
+        UPDATE admin
+        SET statement = 'Locked'
+        WHERE admin_id = #{adminId}
+    </update>
+
+    <!-- 로그인 실패 횟수 초기화 -->
+    <update id="resetFailCount">
+        UPDATE admin
+        SET fail_count = 0
+        WHERE admin_id = #{adminId}
+    </update>
+</mapper>

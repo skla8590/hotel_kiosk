@@ -1,0 +1,218 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Kiosk</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" th:href="@{/css/customer/kiosk.css}"> <!-- 공통 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/2action_btns.css}"> <!-- 메인 버튼 2개 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/header_main.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/top_title.css}">
+    <link rel="stylesheet" th:href="@{/css/customer/modal.css}">
+
+    <style>
+        /* ── CENTER: 호텔명 + 버튼 + 설명 바 ── */
+        .center-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10cqw;
+            padding: 4cqw 5cqw;
+        }
+
+        .hotel-name em {
+            color: var(--green);
+            font-style: normal;
+        }
+
+        /* ── BOTTOM: 설명 바 ── */
+        .status-bar {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1.8cqw;
+            padding: 2cqw 4cqw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5cqw;
+            box-shadow: 0 0.3cqw 1.5cqw var(--shadow);
+        }
+
+        .status-dot {
+            width: 1.2cqw;
+            height: 1.2cqw;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 0 0.4cqw rgba(30, 77, 58, 0.2);
+            animation: pulse 2.5s infinite;
+            flex-shrink: 0
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0.4cqw rgba(30, 77, 58, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 0 0.8cqw rgba(30, 77, 58, 0.08);
+            }
+        }
+
+        .status-text {
+            font-size: 2.8cqw;
+            font-weight: 300;
+            color: var(--text-sub);
+            letter-spacing: 0.04em;
+        }
+
+        /* 입장 애니메이션 */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(2cqw);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            animation: fadeUp 0.5s ease both 0.05s;
+            opacity: 0;
+        }
+
+        .hotel-section {
+            animation: fadeUp 0.5s ease both 0.18s;
+            opacity: 0;
+        }
+
+        .actions-row {
+            animation: fadeUp 0.55s ease both 0.32s;
+            opacity: 0;
+        }
+
+        .status-bar {
+            animation: fadeUp 0.5s ease both 0.45s;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="kiosk">
+    <!-- 상단 네비 -->
+    <div class="header">
+        <div class="header-left">
+            <button class="btn-home" onclick="goHome()">홈</button>
+            <div class="tab-bar">
+                <button class="tab active">호텔 안내</button>
+            </div>
+        </div>
+
+        <button class="btn-back" onclick="goBack()">
+            <svg class="back-icon" viewBox="0 0 24 24">
+                <path d="M11.67 3.87L9.9 2.1 0 12l9.9 9.9 1.77-1.77L3.54 12z" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- center-block: 호텔명 + 버튼 + 설명 바 -->
+    <div class="center-block">
+        <!-- 페이지 타이틀 바 -->
+        <div class="page-title-bar">
+            <div class="page-title-ko">예약 서비스</div>
+            <div class="page-title-en">RESERVATION</div>
+        </div>
+
+        <!-- 체크인 / 예약하기 버튼 -->
+        <div class="actions-row">
+            <button class="action-btn btn-left" onclick="ripple(event)">
+                <span class="btn-icon">🏨️</span>
+                <span class="btn-title" id="btn-onsite-title">현장 예약</span>
+                <span class="btn-sub" id="btn-onsite-sub">ON-SITE</span>
+            </button>
+
+            <button class="action-btn btn-right" onclick="ripple(event)">
+                <span class="btn-icon">🗓️</span>
+                <span class="btn-title" id="btn-extended-title">숙박 연장</span>
+                <span class="btn-sub" id="btn-extended-sub">EXTENDED-STAY</span>
+            </button>
+
+        </div>
+
+        <!-- 상태바: 버튼 바로 아래 -->
+        <div class="status-bar">
+            <div class="status-dot"></div>
+            <span class="status-text" id="status-text">원하시는 서비스를 선택해 주세요</span>
+        </div>
+
+    </div>
+
+    <div class="bottom-spacer"></div>
+
+    <!-- 타임아웃 모달 -->
+    <div class="modal-overlay hidden" id="timeoutModal">
+        <div class="modal-box">
+            <p><span id="timeoutSec">10</span>초 후<br>메인 화면으로 돌아갑니다.</p>
+            <div class="modal-sub-msg">
+                계속 진행하시려면 화면을 클릭해 주세요.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/customer/header.js}"></script>
+<script th:src="@{/js/customer/2actionBtns.js}"></script>
+<script th:src="@{/js/customer/modal.js}"></script>
+<script th:src="@{/js/customer/timeout.js}"></script>
+<script>
+    /* 뒤로가기로 접근(BFCache 복원)시, 애니메이션 효과 재실행 */
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) {
+            const animated = document.querySelectorAll(
+                '.header, .hotel-section, .actions-row, .status-bar'
+            )
+
+            animated.forEach(el => {
+                el.style.animation = 'none'
+                el.style.opacity = '0'
+
+                el.offsetHeight
+
+                el.style.animation = ''
+                el.style.opacity = ''
+            })
+        }
+    })
+
+    /* 이전 선택 정보 초기화 (세션에 저장된 정보 모두 초기화) */
+    sessionStorage.clear()
+
+    const btnOnSite = document.querySelector('.btn-left')
+    const btnExtended = document.querySelector('.btn-right')
+
+    if (btnOnSite) {
+        btnOnSite.addEventListener('click', function (e) {
+            setTimeout(() => {
+                window.location.href = '/JHotel/onsite/search'
+            }, 300)
+        })
+    }
+
+    if (btnExtended) {
+        btnExtended.addEventListener('click', function () {
+            setTimeout(() => {
+                window.location.href = '/JHotel/extended/check_info'
+            }, 300)
+        })
+    }
+
+    function goBack() {
+        window.location.href = '/JHotel/main'
+    }
+</script>
+</body>
+</html>

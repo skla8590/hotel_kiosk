@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hotel_kiosk.mapper.customer.PayMapper">
+    <!-- 예약 idx 조회 -->
+    <select id="selectIdxByReservationId" resultType="java.lang.Long">
+        SELECT idx
+        from hotel_kiosk.reservations
+        where reservation_id = #{reservationId}
+    </select>
+
+    <!-- 결제 정보 저장 -->
+    <insert id="insertPayment" useGeneratedKeys="true" keyProperty="paymentId">
+        insert into hotel_kiosk.payments (idx, pay_method, approval_no, room_price, point_amount, option_charge,
+                                          total_charge, sms_status, pay_status, toss_key)
+        values ((select idx from hotel_kiosk.reservations where reservation_id = #{reservationId}),
+                #{payMethod}, #{approvalNo}, #{roomPrice}, #{pointAmount}, #{optionCharge}, #{totalCharge},
+                #{smsStatus}, #{payStatus}, #{tossKey, jdbcType=VARCHAR})
+    </insert>
+
+    <!-- 토스 로그 저장 -->
+    <insert id="insertTossLog">
+        insert into hotel_kiosk.toss_log (payment_id, toss_key, result_code, result_message, log_content)
+        values (#{paymentId}, #{paymentKey}, #{resultCode}, #{resultMessage}, #{logContent})
+    </insert>
+
+    <!-- 예약 결제 상태 업데이트 -->
+    <update id="updateReservationStatus">
+        update hotel_kiosk.reservations
+        set pay_status = #{payStatus}
+        where idx = #{idx}
+    </update>
+
+    <!-- 예약 SMS 발송 상태 업데이트 -->
+    <update id="updateReservationSmsStatus">
+        UPDATE hotel_kiosk.reservations
+        SET sms_status = #{smsStatus}
+        WHERE idx = #{idx}
+    </update>
+
+    <!-- 회원 조회 -->
+    <select id="selectMemberByPhoneAndBirth" resultType="hotel_kiosk.domain.customer.Members">
+        SELECT *
+        FROM hotel_kiosk.members
+        WHERE member_phone = #{memberPhone}
+          AND member_birth = #{memberBirth};
+    </select>
+
+    <!-- 회원 포인트 차감 -->
+    <update id="updateMemberPoint">
+        update hotel_kiosk.members
+        set member_point = member_point - #{pointAmount}
+        where member_phone = #{memberPhone} and member_birth = #{memberBirth}
+    </update>
+
+    <!-- 멤버 조회 -->
+    <select id="selectMemberNoByPhone" resultType="java.lang.Long">
+        select member_no
+        from hotel_kiosk.members
+        where member_phone = #{memberPhone}
+        LIMIT 1
+    </select>
+
+    <!-- 포인트 내역 -->
+    <insert id="insertMemberPoint">
+        insert into hotel_kiosk.members_point (member_no, idx, earning, using_point, change_date)
+        values (#{memberNo}, #{idx}, #{earning}, #{usingPoint}, NOW())
+    </insert>
+
+    <!-- 객실호실, 객실명 조회 -->
+    <resultMap id="roomNoName" type="hotel_kiosk.dto.admin.RoomMasterDTO" autoMapping="true">
+        <id property="roomNo" column="ro"/>
+        <result property="roomName" column="rn"/>
+    </resultMap>
+    <select id="selectRoomNameByReservationId" resultMap="roomNoName">
+        select rm.room_name as rn, rm.room_no as ro
+        from hotel_kiosk.reservations r
+                 join hotel_kiosk.room_master rm on r.room_no = rm.room_no
+        where r.reservation_id = #{reservationId}
+    </select>
+
+    <!-- 기존 회원 포인트 적립 -->
+    <update id="updateMemberPointEarning">
+        UPDATE hotel_kiosk.members
+        SET member_point = member_point + #{earnPoint}
+        WHERE member_phone = #{memberPhone}
+          AND member_birth = #{memberBirth}
+    </update>
+
+    <!-- 신규 회원 포인트 적립 -->
+    <insert id="insertMemberForEarn" useGeneratedKeys="true" keyProperty="memberNo">
+        INSERT INTO hotel_kiosk.members (member_name, member_phone, member_birth, member_point, reg_date, reservation_count)
+        VALUES (#{memberName}, #{memberPhone}, #{memberBirth}, #{earnPoint}, NOW(), 1)
+    </insert>
+
+    <!-- 10분 이상 지난 Waiting 예약 삭제 -->
+    <delete id="deleteWaitingReservations">
+        delete from hotel_kiosk.reservations where pay_status = 'Waiting' and created_at &lt; now() - interval 10 minute
+    </delete>
+</mapper>

@@ -1,0 +1,79 @@
+/* 키패드 판넬 */
+.kb-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100cqw;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: 2.5cqw 2.5cqw 0 0;
+    padding: 2cqw 1cqw 4cqw;
+    transform: translateY(100%);
+    transition: transform 0.26s cubic-bezier(0.32, 0, 0.08, 1);
+    z-index: 1001;
+    box-sizing: border-box;
+}
+.kb-panel.kb-open { transform: translateY(0); }
+
+/* 한글 자판 그리드 */
+.kb-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5cqw; /* 줄 간격 */
+    width: 100%;
+}
+
+.kb-row {
+    display: flex;
+    justify-content: center;
+    gap: 1cqw;
+    width: 100%;
+}
+
+.kb-key {
+    flex: 1;
+    min-width: 0;
+    height: 11cqw;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 1.2cqw;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 3.5cqw;
+    font-weight: 500;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+/* 특수 버튼 스타일 및 크기 조절 */
+.kb-key.kb-func {
+    flex: 1.5;
+    background: #e0e0e0;
+    font-size: 2.8cqw;
+}
+
+.kb-key.kb-space {
+    grid-column: span 6;
+    background: var(--surface);
+}
+
+.kb-key.kb-confirm {
+    flex: 3;
+    background: var(--green);
+    color: #fff;
+    font-weight: 600;
+}
+
+.kb-key:active { background: #ddd;
+    transform: scale(0.96); }
+
+.np-handle {
+    width: 8cqw;
+    height: 0.8cqw;
+    background: #ccc;
+    border-radius: 1cqw;
+    margin: 0 auto 2cqw;
+}

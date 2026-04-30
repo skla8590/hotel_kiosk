@@ -1,0 +1,102 @@
+/* 메인 버튼 */
+.actions-row {
+    width: 100%;
+    display: flex;
+    gap: 3cqw;
+}
+
+.action-btn {
+    flex: 1;
+    aspect-ratio: 1 / 1;
+    border: none;
+    border-radius: 4cqw;
+    cursor: pointer;
+    display: grid;
+    grid-template-rows: 1fr auto auto 1fr;
+    align-items: center;
+    justify-items: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    padding: 0;
+}
+
+.action-btn:hover {
+    transform: translateY(-0.6cqw);
+}
+
+.action-btn:active {
+    transform: translateY(-0.2cqw);
+}
+
+/* 버튼 디자인 */
+.btn-left, .btn-right {
+    background: var(--surface);
+    border: 0.3cqw solid #e0e0e0;
+    box-shadow: 0 1.5cqw 5cqw var(--shadow);
+}
+
+/* 버튼 호버 효과 */
+.btn-left:hover, .btn-right:hover {
+    border-color: var(--green);
+    box-shadow: 0 2.5cqw 7cqw rgba(30, 77, 58, 0.12);
+}
+
+.btn-left .btn-icon, .btn-right .btn-icon {
+    color: var(--green);
+}
+
+.btn-left .btn-title, .btn-right .btn-title {
+    color: var(--text);
+}
+
+/* 버튼 hover 하단 라인 효과 */
+.btn-left::after, .btn-right::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 0.5cqw;
+    background: var(--green);
+    transform: scaleX(0);
+    transition: transform 0.25s ease;
+    border-radius: 0 0 4cqw 4cqw;
+}
+
+.btn-left:hover::after, .btn-right:hover::after {
+    transform: scaleX(1);
+}
+
+.btn-icon {
+    grid-row: 2;
+    font-size: 8cqw;
+    line-height: 1;
+    margin-bottom: 2cqw;
+}
+
+.btn-title {
+    grid-row: 3;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 4.5cqw;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 5.5cqw;
+}
+
+.btn-sub {
+    position: absolute;
+    bottom: 4cqw;
+    left: 0;
+    right: 0;
+    font-size: 3cqw;
+    font-weight: 400;
+    text-align: center;
+    line-height: 1.5;
+    padding: 0 2cqw;
+    color: var(--text-sub);
+}

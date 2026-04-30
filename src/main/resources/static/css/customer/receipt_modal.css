@@ -1,0 +1,247 @@
+/* 모달 오버레이 */
+.modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 4cqw;
+    backdrop-filter: blur(2px);
+}
+.modal-overlay.hidden { display: none; }
+
+/* 영수증 모달 박스 */
+.receipt-modal {
+    background: var(--surface);
+    border-radius: 2cqw;
+    width: 100%;
+    max-height: 90cqh;
+    overflow-y: auto;
+    scrollbar-width: none;
+    box-shadow: 0 4cqw 16cqw rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+}
+.receipt-modal::-webkit-scrollbar { display: none; }
+
+/* 상단 타이머 바 */
+.receipt-timer-bar {
+    background: #2e2e2e;
+    padding: 1.8cqw 4cqw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 2cqw 2cqw 0 0;
+    flex-shrink: 0;
+}
+
+.timer-label {
+    font-size: 2.4cqw; font-weight: 500;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.03em;
+}
+
+.timer-count {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2.8cqw; font-weight: 700;
+    color: #fff;
+}
+
+/* 타이머 진행 바 */
+.timer-progress-wrap {
+    background: rgba(255,255,255,0.2);
+    height: 0.4cqw;
+    flex-shrink: 0;
+}
+.timer-progress {
+    height: 100%;
+    background: rgba(255,255,255,0.6);
+    width: 100%;
+    transition: width 1s linear;
+}
+
+/* ── 영수증 본문 ── */
+.receipt-body {
+    padding: 4cqw 5cqw;
+    display: flex;
+    flex-direction: column;
+    gap: 3cqw;
+}
+
+/* 제목 */
+.receipt-title {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 6cqw; font-weight: 600;
+    color: var(--text);
+    text-align: center;
+    letter-spacing: 0.1em;
+}
+
+/* 메타 정보 (번호/날짜) */
+.receipt-meta {
+    display: flex; flex-direction: column; gap: 0.8cqw;
+    padding-bottom: 2.5cqw;
+    border-bottom: 1px solid var(--border);
+}
+
+.receipt-meta-row {
+    display: flex; justify-content: space-between;
+}
+
+.receipt-meta-key {
+    font-size: 2.4cqw; color: var(--text-sub); font-weight: 400;
+}
+
+.receipt-meta-val {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2.4cqw; font-weight: 500; color: var(--text);
+}
+
+/* 섹션 라벨 */
+.receipt-section-label {
+    font-size: 2.6cqw; font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    margin-bottom: -0.5cqw;
+}
+
+/* 이용 내역 */
+.receipt-items {
+    display: flex; flex-direction: column; gap: 1.2cqw;
+    padding-bottom: 2.5cqw;
+    border-bottom: 1px solid var(--border);
+}
+
+.receipt-item {
+    display: flex; justify-content: space-between; align-items: center;
+}
+
+.item-name {
+    font-size: 2.6cqw; font-weight: 400; color: var(--text);
+    flex: 1; padding-right: 2cqw;
+}
+
+.item-name.discount { color: var(--gold); }
+
+.item-price {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2.6cqw; font-weight: 500; color: var(--text);
+    white-space: nowrap;
+}
+
+.item-price.discount { color: var(--gold); }
+
+/* 소계 박스 */
+.receipt-summary {
+    background: var(--gold-light);
+    border-radius: 1.2cqw;
+    padding: 2.5cqw 3cqw;
+    display: flex; flex-direction: column; gap: 1.2cqw;
+}
+
+.summary-row {
+    display: flex; justify-content: space-between; align-items: center;
+}
+
+.summary-key {
+    font-size: 2.4cqw; font-weight: 400; color: var(--text-sub);
+}
+
+.summary-val {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2.4cqw; font-weight: 500; color: var(--text);
+}
+
+.summary-val.discount { color: var(--gold); font-weight: 600; }
+
+/* 합계 행 */
+.receipt-total {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 2cqw;
+    border-top: 0.4cqw solid var(--green);
+    margin-top: 0.5cqw;
+}
+
+.total-label {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 4cqw; font-weight: 600; color: var(--text);
+    letter-spacing: 0.05em;
+}
+
+.total-value {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 4.5cqw; font-weight: 700; color: var(--text);
+    letter-spacing: 0.02em;
+}
+
+/* 결제 정보 */
+.receipt-payment {
+    display: flex; flex-direction: column; gap: 1.2cqw;
+    padding-bottom: 2.5cqw;
+    border-bottom: 1px solid var(--border);
+}
+
+.payment-method-label {
+    font-size: 2.6cqw; font-weight: 600;
+    color: var(--gold);
+    display: flex; align-items: center; gap: 1cqw;
+}
+
+.payment-row {
+    display: flex; justify-content: space-between;
+}
+
+.payment-key {
+    font-size: 2.4cqw; font-weight: 400; color: var(--text-sub);
+}
+
+.payment-val {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2.4cqw; font-weight: 500; color: var(--text);
+}
+
+/* 하단 호텔 정보 */
+.receipt-footer {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 1.2cqw;
+    padding-top: 1cqw;
+    text-align: center;
+}
+
+.receipt-divider-gold {
+    width: 100%; height: 0.3cqw;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+}
+
+.hotel-name-receipt {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 3.8cqw; font-weight: 700;
+    color: var(--text); letter-spacing: 0.12em;
+}
+
+.hotel-addr {
+    font-size: 2.2cqw; font-weight: 300;
+    color: var(--text-sub); line-height: 1.6;
+}
+
+.hotel-thanks {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 2.6cqw; font-weight: 500;
+    color: var(--text); margin-top: 0.5cqw;
+}
+
+/* 닫기 버튼 */
+.receipt-close-btn {
+    margin: 0 5cqw 4cqw;
+    width: calc(100% - 10cqw);
+    font-size: 3.2cqw; font-weight: 500;
+    color: #fff; background: #2e2e2e;
+    border: none; border-radius: 1.5cqw;
+    padding: 2.8cqw; cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+.receipt-close-btn:hover { background: #1a1a1a; }

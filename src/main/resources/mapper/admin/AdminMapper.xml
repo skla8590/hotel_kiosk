@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hotel_kiosk.mapper.admin.AdminMapper">
+    <!-- 관리자 계정 생성 -->
+    <insert id="insert">
+        INSERT INTO admin
+        (admin_id, password, admin_name, admin_email, admin_phone, admin_grade, last_login_ip)
+        VALUES (#{adminId}, #{password}, #{adminName}, #{adminEmail}, #{adminPhone}, #{adminGrade}, #{lastLoginIp})
+    </insert>
+
+    <!-- 관리자 계정 목록 -->
+    <select id="selectAll" resultType="hotel_kiosk.domain.admin.Admin">
+        SELECT *
+        FROM admin
+        ORDER BY admin_id
+    </select>
+
+    <!-- 관리자 계정 조회 -->
+    <select id="selectOne" resultType="hotel_kiosk.domain.admin.Admin">
+        SELECT *
+        FROM admin
+        WHERE admin_id = #{adminId}
+    </select>
+
+    <!-- 관리자 검색 키워드 조회 -->
+    <select id="selectKeyword" resultType="hotel_kiosk.domain.admin.Admin">
+        SELECT *
+        FROM admin
+        WHERE 1=1
+
+        <if test="keyword != null and keyword != ''">
+            AND (
+                admin_id LIKE CONCAT('%', #{keyword}, '%')
+                OR admin_email LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+
+        <if test="adminGrade != null and adminGrade != ''">
+            AND admin_grade = #{adminGrade}
+        </if>
+    </select>
+
+    <!-- 현재 관리자 비밀번호 조회 -->
+    <select id="findPasswordById" resultType="java.lang.String">
+        SELECT password
+        FROM admin
+        WHERE admin_id = #{adminId}
+    </select>
+
+    <!-- 관리자 계정 수정 -->
+    <update id="update">
+        UPDATE admin
+        <set>
+            <if test="adminPhone != null">
+                admin_phone = #{adminPhone},
+            </if>
+            <if test="adminEmail != null">
+                admin_email = #{adminEmail},
+            </if>
+            last_login = NOW(),
+            <if test="lastLoginIp != null">
+                last_login_ip = #{lastLoginIp},
+            </if>
+        </set>
+        WHERE admin_id = #{adminId}
+    </update>
+
+    <!-- 관리자 비밀번호 수정 -->
+    <update id="updatePassword">
+        UPDATE admin
+        SET password = #{password}
+        WHERE admin_id = #{adminId}
+    </update>
+
+    <!-- 관리자 권한 변경 -->
+    <update id="updateRole">
+        UPDATE admin
+        SET admin_grade = #{adminGrade}
+        WHERE admin_id = #{adminId}
+    </update>
+
+    <!-- 관리자 상태 변경 -->
+    <update id="updateStatement">
+        UPDATE admin
+        SET statement = #{statement}
+        WHERE admin_id = #{adminId}
+    </update>
+</mapper>

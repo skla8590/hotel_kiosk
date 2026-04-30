@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hotel_kiosk.mapper.admin.MembersPointMapper">
+    <!-- 사용 포인트 조회 (음수 합계) -->
+    <select id="selectUsedPoint" resultType="java.lang.Integer">
+        SELECT IFNULL(SUM(using_point),0)
+        FROM members_point
+        WHERE idx = #{idx}
+    </select>
+
+    <!-- 적립 포인트 조회 (양수 합계) -->
+    <select id="selectEarnedPoint" resultType="java.lang.Integer">
+        SELECT IFNULL(SUM(earning),0)
+        FROM members_point
+        WHERE idx = #{idx}
+    </select>
+
+    <!-- 포인트 기록 추가 -->
+    <insert id="insertPointHistory">
+        INSERT INTO members_point (member_no, idx, earning, using_point)
+        VALUES (#{memberNo}, #{idx}, #{earnedPoint}, #{usedPoint})
+    </insert>
+</mapper>

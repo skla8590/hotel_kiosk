@@ -1,0 +1,314 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+  <title>Hotel Kiosk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" th:href="@{/css/customer/kiosk.css}"> <!-- 공통 css -->
+  <link rel="stylesheet" th:href="@{/css/customer/header_main.css}"> <!-- 메인 헤더 css -->
+  <link rel="stylesheet" th:href="@{/css/customer/top_title.css}"> <!-- 최상단 타이틀 css -->
+  <link rel="stylesheet" th:href="@{/css/customer/modal.css}">
+
+  <style>
+    .kiosk { overflow: clip; display: grid; grid-template-rows: auto auto auto 1fr auto; }
+
+    /* ── 안내 텍스트 바 ── */
+    .guide-bar {
+      margin: 2.5cqw 4cqw 2cqw;
+      background: #4a4a4a;
+      border-radius: 1.2cqw;
+      padding: 1.8cqw 3cqw;
+      text-align: center;
+      font-size: 2.6cqw; font-weight: 400;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: 0.03em;
+      animation: fadeUp 0.4s ease both 0.2s; opacity: 0;
+    }
+
+    /* ── 콘텐츠 ── */
+    .content-area {
+      margin: 2.5cqw 4cqw 0;
+      overflow-y: auto; scrollbar-width: none;
+      display: flex; flex-direction: column; gap: 2.5cqw;
+      animation: fadeUp 0.4s ease both 0.3s; opacity: 0;
+    }
+    .content-area::-webkit-scrollbar { display: none; }
+
+    /* ── 객실 카드 ── */
+    .room-card {
+      background: var(--surface);
+      border-radius: 2cqw;
+      border: 0.35cqw solid var(--border);
+      box-shadow: 0 0.5cqw 2.5cqw var(--shadow);
+      padding: 3cqw;
+      display: grid;
+      grid-template-columns: 2.2fr 3fr;
+      gap: 3cqw;
+      align-items: center;
+      cursor: pointer;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .room-card:hover {
+      border-color: rgba(30,77,58,0.4);
+      box-shadow: 0 1cqw 4cqw rgba(30,77,58,0.1);
+    }
+
+    .room-card.selected {
+      border-color: var(--green);
+      border-width: 0.5cqw;
+      box-shadow: 0 1cqw 4cqw rgba(30,77,58,0.18);
+    }
+
+    /* 객실 사진 */
+    .room-photo {
+      aspect-ratio: 1 / 1;
+      background: #ececec;
+      border-radius: 1.5cqw;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .room-photo-label {
+      font-size: 2.4cqw; color: var(--text-sub);
+    }
+
+    /* 객실 정보 */
+    .room-info-col {
+      display: flex; flex-direction: column; gap: 1.2cqw;
+    }
+
+    .room-name {
+      font-size: 3.2cqw; font-weight: 500;
+      color: var(--text);
+      margin-bottom: 1cqw;
+    }
+
+    .room-detail-row {
+      display: flex; flex-direction: column; gap: 0.5cqw;
+    }
+
+    .room-detail-item {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-top: 2cqw;
+      font-size: 2.6cqw;
+    }
+
+    .room-detail-key {
+      color: var(--text-sub); font-weight: 400;
+      min-width: 8cqw;
+    }
+
+    .room-detail-val {
+      font-family: 'Montserrat', sans-serif;
+      color: var(--text); font-weight: 500;
+      text-align: right;
+      margin-left: auto;
+    }
+
+    /* 선택 표시 */
+    .room-card.selected .room-name {
+      color: var(--green);
+    }
+
+    /* ── 하단 푸터 ── */
+    .footer {
+      padding: 3cqw 4cqw 4cqw;
+      animation: fadeUp 0.4s ease both 0.4s; opacity: 0;
+    }
+
+    .btn-confirm {
+      width: 100%;
+      font-size: 4cqw; font-weight: 500;
+      color: #fff; background: #2e2e2e;
+      border: none; border-radius: 1.8cqw;
+      padding: 3.5cqw; cursor: pointer;
+      letter-spacing: 0.06em;
+      box-shadow: 0 1cqw 3cqw rgba(0,0,0,0.2);
+      transition: all 0.2s ease;
+    }
+    .btn-confirm:hover  { background: #1a1a1a; }
+    .btn-confirm:active { transform: scale(0.99); }
+    .btn-confirm:disabled {
+      background: #888; cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* ── 애니메이션 ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(2cqw); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .header         { animation: fadeUp 0.4s ease both 0.05s; opacity: 0; }
+    .page-title-bar { animation: fadeUp 0.4s ease both 0.15s; opacity: 0; }
+  </style>
+
+</head>
+<body>
+
+<div class="kiosk">
+
+  <!-- 상단 네비 -->
+  <div class="header">
+    <div class="header-left">
+      <button class="btn-home" onclick="goHome()">홈</button>
+      <div class="tab-bar">
+        <button class="tab active">호텔 안내</button>
+      </div>
+    </div>
+
+    <button class="btn-back" onclick="goBack()">
+      <svg class="back-icon" viewBox="0 0 24 24">
+        <path d="M11.67 3.87L9.9 2.1 0 12l9.9 9.9 1.77-1.77L3.54 12z" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- 페이지 타이틀 바 -->
+  <div class="page-title-bar">
+    <div class="page-title-ko">숙박 연장</div>
+    <div class="page-title-en">EXTENDED STAY</div>
+  </div>
+
+  <!-- 안내 바 -->
+  <div class="guide-bar">숙박 연장을 원하는 예약 정보를 선택해 주세요.</div>
+
+  <!-- 객실 카드 목록 -->
+  <div class="content-area" id="reservation"></div>
+
+  <!-- 하단 확인 버튼 -->
+  <div class="footer">
+    <button class="btn-confirm" id="btnConfirm" onclick="confirmSelection()" disabled>확인</button>
+  </div>
+
+  <!-- 타임아웃 모달 -->
+  <div class="modal-overlay hidden" id="timeoutModal">
+    <div class="modal-box">
+      <p><span id="timeoutSec">10</span>초 후<br>메인 화면으로 돌아갑니다.</p>
+      <div class="modal-sub-msg">
+        계속 진행하시려면 화면을 클릭해 주세요.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script th:src="@{/js/customer/header.js}"></script>
+<script th:src="@{/js/customer/modal.js}"></script>
+<script th:src="@{/js/customer/timeout.js}"></script>
+<script>
+  /* 뒤로가기로 접근(BFCache 복원)시, 애니메이션 효과 재실행 */
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted) {
+      const animated = document.querySelectorAll(
+              '.header, .page-title-bar, .footer, .content-area, .guide-bar'
+      )
+
+      animated.forEach(el => {
+        el.style.animation = 'none'
+        el.style.opacity = '0'
+
+        el.offsetHeight
+
+        el.style.animation = ''
+        el.style.opacity = ''
+      })
+    }
+  })
+
+  const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+  const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+  const reservation = JSON.parse(sessionStorage.getItem('reservation'))
+  const reservationId = reservation.reservationId
+
+  fetch('/JHotel/extended/available', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', [csrfHeader]: csrfToken},
+    body: JSON.stringify({reservationId: reservationId})
+  })
+          .then(res => {
+            if (res.ok && res.headers.get('content-length') !== '0') {
+              return res.json()
+            }
+            return null
+          })
+          .then(function(reservationDetail) {
+            if (reservationDetail) {
+              sessionStorage.setItem('reservationDetail', JSON.stringify(reservationDetail))
+              renderRoom()
+            } else {
+
+            }
+          })
+
+  /* 예약 정보 출력 */
+  function renderRoom() {
+    const grid = document.getElementById('reservation')
+    const details = JSON.parse(sessionStorage.getItem('reservationDetail'))
+
+    for (let i = 0; i < details.length; i++) {
+      const detail = details[i]
+      let phone = detail.memberPhone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+
+      grid.innerHTML += `
+    <div class="room-card" id="card-${detail.roomNo}" onclick="selectRoom('${detail.roomNo}')">
+            <div class="room-photo">
+                 <img src="${detail.imageUrl}" alt="${detail.roomName}"
+         style="width:100%; height:100%; object-fit:cover; border-radius:1.5cqw;">
+            </div>
+            <div class="room-info-col">
+                <div class="room-name">${detail.roomName} (${detail.roomView})</div>
+                <div class="room-detail-row">
+                    <div class="room-detail-item">
+                        <span class="room-detail-key">예약자 명</span>
+                        <span class="room-detail-val">${detail.memberName}</span>
+                    </div>
+                    <div class="room-detail-item">
+                        <span class="room-detail-key">연락처</span>
+                        <span class="room-detail-val">${phone}</span>
+                    </div>
+                    <div class="room-detail-item">
+                        <span class="room-detail-key">숙박 기간</span>
+                        <span class="room-detail-val">${detail.checkinDate}<br> ~ ${detail.checkoutDate}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `
+    }
+  }
+
+  /* 객실 선택 활성화 및 선택 객실번호 저장 */
+  var selectedRoomNo = null
+
+  function selectRoom(roomNo) {
+    // 선택한 객실 재클릭 -> 선택 취소
+    if (selectedRoomNo === roomNo) {
+      document.getElementById(`card-${roomNo}`).classList.remove('selected')
+      selectedRoomNo = null
+      document.getElementById('btnConfirm').disabled = true
+      document.getElementById('btnConfirm').style.background = ''
+      return
+    }
+
+    if (selectedRoomNo !== null) {
+      document.getElementById(`card-${selectedRoomNo}`).classList.remove('selected');
+    }
+
+    selectedRoomNo = roomNo;
+    document.getElementById(`card-${roomNo}`).classList.add('selected');
+    document.getElementById('btnConfirm').disabled = false;
+    document.getElementById('btnConfirm').style.background = '#1a1a1a';
+  }
+
+  function confirmSelection() {
+    if (!selectedRoomNo) return
+
+    sessionStorage.setItem('selectedRoomNo', selectedRoomNo); // roomNo 저장
+    window.location.href = '/JHotel/extended/set_checkoutDate';
+  }
+</script>
+</body>
+</html>

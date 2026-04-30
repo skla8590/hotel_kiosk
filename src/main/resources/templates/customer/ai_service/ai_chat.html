@@ -1,0 +1,508 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Hotel Kiosk - 호텔 안내</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" th:href="@{/css/customer/kiosk.css}"> <!-- 공통 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/header_main.css}"> <!-- 메인 헤더 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/top_title.css}"> <!-- 최상단 타이틀 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/modal.css}">
+
+    <style>
+        .kiosk {
+            display: grid;
+            grid-template-rows: auto auto auto auto 1fr auto; /* header / page-title-bar / date-bar / filter-row / rooms-area / footer-cta */
+        }
+
+        .page-title-bar {
+            margin-top: 10cqw;
+            margin-bottom: 3cqw;
+        }
+
+        /* 화면 전환 */
+        .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+        .screen.active { display: flex; }
+
+        /* 채팅 영역 */
+        .chat-body {
+            flex: 1;
+            padding: 4cqw var(--btn-px) 2cqw;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        /* msg-block: 오른쪽 정렬 */
+        .msg-block {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            margin-bottom: 4cqw;
+            animation: fadeUp 0.3s ease both;
+        }
+
+        .msg-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+            gap: var(--icon-gap);
+            width: 100%;
+        }
+
+        /* 말풍선 래퍼 */
+        .bubble-wrap {
+            position: relative;
+            width: 70cqw;
+            flex-shrink: 0;
+        }
+
+        /* 말풍선 본체 */
+        .bubble {
+            background: var(--surface);
+            border-radius: 3cqw 0 3cqw 3cqw;
+            padding: 2.8cqw 3.2cqw;
+            font-size: 3cqw;
+            line-height: 1.75;
+            color: var(--text);
+            font-family: 'Noto Sans KR', sans-serif;
+            box-shadow: 0 0.5cqw 2cqw rgba(0,0,0,0.10);
+            width: 100%;
+        }
+
+        /* 말풍선 꼬리 */
+        .bubble-wrap::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -10px;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 16px 16px 0 0;
+            border-color: var(--surface) transparent transparent transparent;
+        }
+
+        .bubble .intent { font-weight: 700; }
+
+        /* 챗봇 아이콘 */
+        .bot-icon {
+            width: var(--icon-size);
+            height: var(--icon-size);
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: #d0eaf8;
+            box-shadow: 0 0.4cqw 1.5cqw rgba(0,0,0,0.10);
+        }
+
+        /* 버튼 그룹 */
+        .btn-group {
+            width: 100%;
+            display: flex;
+            gap: 2cqw;
+            margin-top: 5cqw;
+            animation: fadeUp 0.35s ease both;
+        }
+        .btn-group.vertical { flex-direction: column; }
+
+        .btn-choice {
+            flex: 1;
+            background: #666; color: #fff; border: none;
+            border-radius: 2cqw; padding: 2.5cqw 2cqw;
+            font-size: 3cqw; font-weight: 600;
+            font-family: 'Noto Sans KR', sans-serif;
+            cursor: pointer; text-align: center;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn-choice:hover  { background: #444; }
+        .btn-choice:active { transform: scale(0.97); }
+
+        /* 채팅 종료 버튼 */
+        .btn-end-wrap { padding: 1cqw var(--btn-px) 3cqw; animation: fadeUp 0.4s ease both; }
+        .btn-end {
+            background: #CC0000; color: #fff; border: none;
+            border-radius: 2cqw; padding: 2.8cqw 2cqw;
+            font-size: 3cqw; font-weight: 700;
+            font-family: 'Noto Sans KR', sans-serif;
+            cursor: pointer; width: 100%;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn-end:hover  { background: #aa0000; }
+        .btn-end:active { transform: scale(0.97); }
+
+        /* 답변 정보 */
+        .content-info { margin-top: 1.5cqw; }
+        .content-info .content-title { font-weight: 700; margin-bottom: 0.4cqw; }
+        .content-info ul { list-style: none; padding-left: 1.5cqw; margin-bottom: 1.8cqw; }
+        .content-info ul li::before { content: "- "; }
+
+        /* 마이크 */
+        .listening-indicator {
+            width: 1.5cqw; height: 1.5cqw; background: #e53;
+            border-radius: 50%; display: inline-block;
+            margin-right: 1cqw; animation: blink 1s infinite; vertical-align: middle;
+        }
+
+        /* 애니메이션 */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(2cqw); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; } 50% { opacity: 0.2; }
+        }
+        .delay-1 { animation-delay: 0.12s; }
+        .delay-2 { animation-delay: 0.24s; }
+        .delay-3 { animation-delay: 0.36s; }
+    </style>
+
+</head>
+<body>
+
+<div class="kiosk">
+
+    <!-- 상단 네비 -->
+    <div class="header">
+        <div class="header-left">
+            <button class="btn-home" onclick="goHome()">홈</button>
+            <div class="tab-bar">
+                <button class="tab active" onclick="goInfo()">호텔 안내</button>
+            </div>
+        </div>
+
+        <button class="btn-back" onclick="goBack()">
+            <svg class="back-icon" viewBox="0 0 24 24">
+                <path d="M11.67 3.87L9.9 2.1 0 12l9.9 9.9 1.77-1.77L3.54 12z"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- 페이지 타이틀 바 -->
+    <div class="page-title-bar">
+        <div class="page-title-ko">AI 음성 채팅 서비스</div>
+        <div class="page-title-en">AI Voice Chat</div>
+    </div>
+
+    <!-- 화면 1: 의도 확인 -->
+    <div class="screen active" id="screen-confirm">
+        <div class="chat-body">
+            <div class="msg-block">
+                <div class="msg-row">
+                    <div class="bubble-wrap">
+                        <div class="bubble">
+                            안녕하세요. 반갑습니다!<br>
+
+                            <!-- 질문이 들어와야 할 공간 -->
+                            <span class="intent" id="questionText"></span><br>
+
+                            위 내용을 요청하신 게 맞으신가요?
+                        </div>
+                    </div>
+                    <img class="bot-icon" th:src="@{/img/chatbot.png}" alt="챗봇">
+                </div>
+                <div class="btn-group delay-1">
+                    <button class="btn-choice" onclick="showResult()">예</button>
+                    <button class="btn-choice" onclick="showRetry()">아니오</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 화면 2: 사용자 질문 재발화 요청 -->
+    <div class="screen" id="screen-retry">
+        <div class="chat-body">
+            <div class="msg-block delay-1">
+                <div class="msg-row">
+                    <div class="bubble-wrap">
+                        <div class="bubble">다시 한 번 말씀해 주시면 정확히 도와드릴게요!</div>
+                    </div>
+                    <img class="bot-icon" th:src="@{/img/chatbot.png}" alt="챗봇">
+                </div>
+            </div>
+
+            <!-- 일정 시간 사용자 발화 없을 시 나타날 채팅창 (계속 떠있는 거 아님 xx) -->
+            <div class="msg-block delay-2">
+                <div class="msg-row">
+                    <div class="bubble-wrap">
+                        <div class="bubble">
+                            <span class="listening-indicator"></span>듣고 있어요! 지금 말씀해 주세요.
+                        </div>
+                    </div>
+                    <img class="bot-icon" th:src="@{/img/chatbot.png}" src="/img/chatbot.jpeg" alt="챗봇">
+                </div>
+            </div>
+
+        </div>
+
+        <!-- '듣고 있어요! ~ ' 나올 때 같이 뜰 채팅 종료 버튼 -->
+        <div class="btn-end-wrap delay-3">
+            <button class="btn-end" onclick="endChat()">채팅 종료</button>
+        </div>
+
+    </div>
+
+    <!-- 화면 3: 답변 결과 -->
+    <div class="screen" id="screen-result">
+        <div class="chat-body">
+            <div class="msg-block">
+                <div class="msg-row">
+                    <div class="bubble-wrap">
+                        <!-- 사용자 질문에 대한 AI 답변 -->
+                        <div class="bubble" id="answerBox">
+                        </div>
+                    </div>
+                    <img class="bot-icon" th:src="@{/img/chatbot.png}" alt="챗봇">
+                </div>
+            </div>
+
+            <div class="msg-block delay-1">
+                <div class="msg-row">
+                    <div class="bubble-wrap">
+                        <div class="bubble">더 궁금한 내용이 있으신가요?</div>
+                    </div>
+                    <img class="bot-icon" th:src="@{/img/chatbot.png}" alt="챗봇">
+                </div>
+
+                <!-- 추가 예상 질문 버튼 -->
+                <div class="btn-group vertical delay-2" id="suggestBox">
+                    <button class="btn-choice"></button>
+                    <button class="btn-choice"></button>
+                    <button class="btn-choice"></button>
+                    <button class="btn-choice"></button>
+                </div>
+
+            </div>
+        </div>
+        <div class="btn-end-wrap delay-3">
+            <button class="btn-end" onclick="endChat()">채팅 종료</button>
+        </div>
+    </div>
+
+    <!-- 타임아웃 모달 -->
+    <div class="modal-overlay hidden" id="timeoutModal">
+        <div class="modal-box">
+            <p><span id="timeoutSec">10</span>초 후<br>메인 화면으로 돌아갑니다.</p>
+            <div class="modal-sub-msg">
+                계속 진행하시려면 화면을 클릭해 주세요.
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script th:src="@{/js/customer/header.js}"></script>
+<script th:src="@{/js/customer/modal.js}"></script>
+<script th:src="@{/js/customer/timeout.js}"></script>
+<!-- lamejs 라이브러리 추가 (음성 MP3 변환용) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+<script th:src="@{/js/customer/ai_service/springai.js}"></script>
+
+<script>
+    /* 뒤로가기로 접근(BFCache 복원)시, 애니메이션 효과 재실행 */
+    // 지우지 말 것!!!
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) {
+            const animated = document.querySelectorAll(
+                '.date-bar, .filter-row, .rooms-area'
+            )
+
+            animated.forEach(el => {
+                el.style.animation = 'none'
+                el.style.opacity = '0'
+
+                el.offsetHeight
+
+                el.style.animation = ''
+                el.style.opacity = ''
+            })
+        }
+    })
+
+
+    /* =========================
+        공통 화면 전환
+    ========================= */
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const target = document.getElementById(id);
+        if (!target) return;
+        target.classList.add('active');
+    }
+
+    /* =========================
+       버튼 이벤트
+    ========================= */
+    function showResult() {
+        showScreen('screen-result');
+        callAI();
+    }
+
+    function showRetry() {
+        showScreen('screen-retry');
+        setTimeout(() => {
+            startVoice();
+        }, 500);
+    }
+
+    function endChat() {
+        sessionStorage.removeItem('finalQuestion');
+        goHome();
+    }
+
+    /* =========================
+       최초 질문 세팅
+    ========================= */
+    window.addEventListener('DOMContentLoaded', async () => {
+
+        // 이미 질문 있으면 표시
+        const question = sessionStorage.getItem('finalQuestion');
+
+        if (question) {
+            document.getElementById('questionText').innerText = `"${question}"`;
+            showScreen('screen-confirm');
+            return;
+        }
+
+        // 음성 시작
+        springAi.wake.start();
+    });
+
+    /* =========================
+       AI 호출
+    ========================= */
+    async function callAI() {
+        try {
+            const question = sessionStorage.getItem('finalQuestion');
+            document.getElementById("answerBox").innerHTML = "생각 중...";
+
+            // 답변을 새로 요청할 때 이전 추천 질문 버튼들을 즉시 숨김
+            const suggestBox = document.getElementById('suggestBox');
+            if(suggestBox) suggestBox.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append("question", question); // 텍스트 질문 전달
+            formData.append("source", "hotel_policy.pdf");
+            formData.append("score", 0.0);
+
+            const res = await fetch('/JHotel/ai_chat', {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await res.json();
+
+            document.getElementById("answerBox").innerHTML = data.answer;
+            if(data.suggestions) renderSuggestions(data.suggestions);
+
+        } catch (e) {
+            console.error(e);
+            document.getElementById("answerBox").innerHTML = "오류가 발생했습니다.";
+        }
+    }
+
+    /* =========================
+       추천 질문 버튼 생성
+    ========================= */
+    function renderSuggestions(list) {
+        const container = document.querySelector('.btn-group.vertical');
+        container.style.display = 'none';
+        container.innerHTML = "";
+
+        const suggestions = list || [];
+
+        suggestions.forEach(q => {
+            const btn = document.createElement("button");
+            btn.className = "btn-choice";
+            btn.innerText = q;
+
+            btn.onclick = () => {
+                // '기타 문의' 버튼을 눌렀을 경우
+                if (q === '기타 문의') {
+                    showRetry(); // 다시 질문 받는 화면으로 이동 및 마이크 활성화
+                } else {
+                    // 일반 추천 질문을 눌렀을 경우
+                    sessionStorage.setItem('finalQuestion', q);
+                    document.getElementById('questionText').innerText = `"${q}"`;
+                    showScreen('screen-confirm');
+                }
+            };
+
+            container.appendChild(btn);
+        });
+
+        if (container.hasChildNodes()) {
+            container.style.display = 'flex';
+        }
+    }
+
+    /* =========================
+       마이크 실행
+    ========================= */
+    let isListening = false;
+
+    async function startVoice() {
+        // 이미 처리 중이면 중복 실행 방지
+        if (isListening) return;
+        isListening = true;
+
+        try {
+            // 새로운 인식을 시작하기 전에 기존 자원을 완전히 정리
+            if (typeof springAi.voice.stopAll === 'function') {
+                springAi.voice.stopAll();
+            }
+
+            // 브라우저가 하드웨어를 정리할 시간을 주기 위해 300ms 정도 대기 후 시작
+            setTimeout(async () => {
+                springAi.voice.initMic(async (mp3Blob) => {
+                    try {
+                        // "대화 시작" 직전에 컨테이너 초기화 (UX 개선)
+                        const suggestBox = document.getElementById('suggestBox');
+                        if (suggestBox) suggestBox.style.display = 'none';
+
+                        const formData = new FormData();
+                        formData.append("file", mp3Blob);
+                        formData.append("source", "hotel_policy.pdf");
+                        formData.append("score", 0.0);
+
+                        const res = await fetch('/JHotel/ai_chat', {
+                            method: "POST",
+                            body: formData
+                        });
+
+                        if (!res.ok) throw new Error("서버 응답 에러");
+
+                        const data = await res.json();
+
+                        sessionStorage.setItem('finalQuestion', data.question);
+                        document.getElementById('questionText').innerText = `"${data.question}"`;
+                        document.getElementById("answerBox").innerHTML = data.answer;
+
+                        if (data.suggestions) renderSuggestions(data.suggestions);
+
+                        showScreen('screen-confirm');
+
+                        // 처리가 끝났으면 다시 들을 준비
+                        isListening = false;
+
+                    } catch (e) {
+                        console.error("음성 처리 실패:", e);
+                        isListening = false;
+                    }
+                });
+            }, 300);
+
+        } catch (e) {
+            console.error("마이크 초기화 실패:", e);
+            isListening = false;
+        }
+    }
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{admin/layout/layout :: page(title='정책 설정', content=~{::main}, pageScript=~{::script})}">
+<head></head>
+<body>
+<main>
+
+    <!-- 상단 탭 영역 -->
+    <div class="tab-bar" id="policy-tab-bar">
+        <div class="tab-item active" onclick="policy.switchTab(this,'policy-season')">시즌 / 요일별</div>
+        <div class="tab-item" onclick="policy.switchTab(this,'policy-option')">옵션별</div>
+    </div>
+
+    <!-- ══ 시즌 / 요일 ══ -->
+    <div id="policy-season">
+        <div class="dash-grid" style="grid-template-columns:1fr 1fr">
+
+            <!-- 시즌 등록 폼 -->
+            <div class="card" style="align-self:start"
+                 th:classappend="${!#authorization.expression('hasRole(''SUPER'')')} ? ' disabled-card'">
+                <div class="card-head">
+                    <span class="card-title">시즌 요금 등록 / 수정</span>
+                </div>
+                <div class="card-body">
+                    <input type="hidden" id="season-id">
+
+                    <div class="fg mt-8" style="margin-bottom:5px">
+                        <label class="lbl">시즌명</label>
+                        <input class="inp" id="season-name" placeholder="예: 성수기">
+                    </div>
+                    <div class="fg" style="margin-bottom:5px">
+                        <label class="lbl">반복 주기</label>
+                        <select class="inp" id="season-repeat-type">
+                            <option value="None">기본 (반복 없음)</option>
+                            <option value="Weekly">주별</option>
+                            <option value="Monthly">월별</option>
+                        </select>
+                    </div>
+                    <div class="fg" style="margin-bottom:5px">
+                        <label class="lbl">시작일</label>
+                        <input class="inp" id="season-start" type="date">
+                    </div>
+                    <div class="fg" style="margin-bottom:5px">
+                        <label class="lbl">종료일</label>
+                        <input class="inp" id="season-end" type="date">
+                    </div>
+                    <div class="fg" style="margin-bottom:5px">
+                        <label class="lbl">요금 (%)</label>
+                        <input class="inp" id="season-extra" placeholder="예: +30">
+                    </div>
+                    <div class="form-actions">
+                        <button id="btn-add" class="btn btn-gold" onclick="policy.addSeason()">등록</button>
+                        <button id="btn-save" class="btn btn-primary" style="display:none"
+                                onclick="policy.updateSeason()">저장</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 등록된 시즌 목록 - Thymeleaf로 서버에서 렌더링 -->
+            <div class="card">
+                <div class="card-head">
+                    <span class="card-title">시즌 목록</span>
+                </div>
+                <div class="card-body">
+                    <div style="max-height:420px; overflow-y:auto;">
+                        <table class="tbl">
+                            <thead>
+                            <tr>
+                                <th>시즌명</th>
+                                <th>반복</th>
+                                <th>기간</th>
+                                <th>요금</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tbody-season">
+                            <tr th:each="item : ${seasons}"
+                                th:data-id="${item.policyId}"
+                                th:data-name="${item.policyName}"
+                                th:data-repeat="${item.repeatType}"
+                                th:data-start="${item.startDate}"
+                                th:data-end="${item.endDate}"
+                                th:data-rate="${item.discountRate}"
+                                onclick="policy.selectSeasonFromRow(this)"
+                                style="cursor:pointer">
+                                <td th:text="${item.policyName}"></td>
+                                <td th:text="${item.repeatType == 'Monthly'} ? '월별' :
+                                             (${item.repeatType == 'Weekly'} ? '주별' :
+                                             (${item.repeatType == 'None'} ? '-' : ${item.repeatType}))"></td>
+                                <td th:text="${item.startDate} + ' ~ ' + ${item.endDate}"></td>
+                                <td th:text="${item.discountRate > 0} ? ('+' + ${item.discountRate} + '%') : (${item.discountRate} + '%')"></td>
+                            </tr>
+                            <tr th:if="${seasons == null or seasons.isEmpty()}">
+                                <td colspan="4" style="text-align:center; color:var(--c-gray)">등록된 시즌 정책이 없습니다.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 요일별 요금 정책 - Thymeleaf로 weekdayMap 값 렌더링 -->
+        <div class="card mt-16">
+            <div class="card-head">
+                <span class="card-title">요일별 요금 설정</span>
+            </div>
+            <div class="card-body">
+                <div class="weekday-grid">
+                    <div class="wd-cell" data-day="1">
+                        <div class="wd-name">월</div>
+                        <input class="wd-inp" th:value="${weekdayMap[1]}">
+                    </div>
+                    <div class="wd-cell" data-day="2">
+                        <div class="wd-name">화</div>
+                        <input class="wd-inp" th:value="${weekdayMap[2]}">
+                    </div>
+                    <div class="wd-cell" data-day="3">
+                        <div class="wd-name">수</div>
+                        <input class="wd-inp" th:value="${weekdayMap[3]}">
+                    </div>
+                    <div class="wd-cell" data-day="4">
+                        <div class="wd-name">목</div>
+                        <input class="wd-inp" th:value="${weekdayMap[4]}">
+                    </div>
+                    <div class="wd-cell weekend" data-day="5">
+                        <div class="wd-name">금</div>
+                        <input class="wd-inp" th:value="${weekdayMap[5]}">
+                    </div>
+                    <div class="wd-cell weekend" data-day="6">
+                        <div class="wd-name">토</div>
+                        <input class="wd-inp" th:value="${weekdayMap[6]}">
+                    </div>
+                    <div class="wd-cell weekend" data-day="7">
+                        <div class="wd-name">일</div>
+                        <input class="wd-inp" th:value="${weekdayMap[7]}">
+                    </div>
+                </div>
+                <div class="form-actions mt-12">
+                    <button id="btn-weekly-save" class="btn btn-primary" onclick="policy.updateWeekly()" disabled>저장</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ 옵션별 요금 ══ -->
+    <div id="policy-option" style="display: none">
+        <div class="card">
+            <div class="card-head">
+                <span class="card-title">옵션별 요금</span>
+            </div>
+            <div class="card-body">
+                <div class="tbl-wrap">
+                    <table class="tbl">
+                        <thead>
+                        <tr>
+                            <th>옵션명</th>
+                            <th>카테고리</th>
+                            <th>대상</th>
+                            <th>요금</th>
+                        </tr>
+                        </thead>
+                        <!-- 옵션 목록 - Thymeleaf로 서버에서 렌더링 -->
+                        <tbody id="tbody-options">
+                        <!-- data-* 속성으로 값 전달 → JS에서 dataset으로 읽기 -->
+                        <tr th:each="option : ${options}"
+                            th:data-option-id="${option.optionId}"
+                            th:data-option-name="${option.optionName}"
+                            th:data-option-category="${option.optionCategory}"
+                            th:data-option-target="${option.optionTarget}"
+                            th:data-option-price="${option.optionPrice}"
+                            onclick="policy.openOptionEdit(
+                                this.dataset.optionId,
+                                this.dataset.optionName,
+                                this.dataset.optionCategory,
+                                this.dataset.optionTarget,
+                                this.dataset.optionPrice
+                            )"
+                            style="cursor:pointer">
+                            <td th:text="${option.optionName}"></td>
+                            <td th:text="${option.optionCategory}"></td>
+                            <td th:text="${option.optionTarget}"></td>
+                            <td th:text="'₩' + ${#numbers.formatInteger(option.optionPrice, 0, 'COMMA')}"></td>
+                        </tr>
+                        <tr th:if="${options == null or options.isEmpty()}">
+                            <td colspan="4" style="text-align:center; color:var(--c-gray)">등록된 옵션이 없습니다.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="form-actions mt-16">
+                    <button class="btn btn-gold"
+                            sec:authorize="hasRole('SUPER')"
+                            onclick="policy.openOptionModal()">등록
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 옵션 등록/수정 모달 -->
+    <div class="overlay" id="modal-option">
+        <div class="modal modal-sm">
+            <div class="modal-head">
+                <span class="modal-title" id="modal-title">옵션 등록</span>
+                <button class="modal-close" onclick="closeModal('modal-option')">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="opt-id">
+                <div class="fg">
+                    <label class="lbl">옵션명</label>
+                    <input class="inp" id="opt-name">
+                </div>
+                <div class="fg">
+                    <label class="lbl">카테고리</label>
+                    <select id="opt-category" class="sel">
+                        <option value="Meal">Meal</option>
+                        <option value="Leisure">Leisure</option>
+                        <option value="Consumable">Consumable</option>
+                    </select>
+                </div>
+                <div class="fg">
+                    <label class="lbl">적용 대상</label>
+                    <select id="opt-target" class="sel" onchange="policy.changeTarget()">
+                        <option value="Common">Common</option>
+                        <option value="Adult">Adult</option>
+                        <option value="Child">Child</option>
+                    </select>
+                </div>
+                <div class="fg">
+                    <label class="lbl">일반 요금</label>
+                    <input class="inp" id="opt-common">
+                </div>
+                <div class="fg">
+                    <label class="lbl">대인 요금</label>
+                    <input class="inp" id="opt-adult">
+                </div>
+                <div class="fg">
+                    <label class="lbl">소인 요금</label>
+                    <input class="inp" id="opt-child">
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn btn-ghost" onclick="closeModal('modal-option')">취소</button>
+                <button class="btn btn-primary" onclick="policy.saveOption()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const isSuperAdmin = [[${#authorization.expression('hasRole(''SUPER'')')}]];
+    </script>
+</main>
+</body>
+</html>

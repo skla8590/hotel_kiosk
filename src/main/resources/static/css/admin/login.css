@@ -1,0 +1,215 @@
+/* ══════════════════════════════════════════════════════
+   login.css  |  관리자 로그인 페이지 스타일
+   디자인 기준: 무인 호텔 키오스크 관리자 와이어프레임
+══════════════════════════════════════════════════════ */
+
+/* ── 리셋 & 기본 ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: #E0DFDB;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   상단 헤더 바
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.top-bar {
+  background: #2B2B2B;
+  padding: 14px 28px;
+  flex-shrink: 0;
+}
+.top-bar-title {
+  color: #FFFFFF;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   페이지 중앙 정렬 영역
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.page-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   흰색 카드
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.card {
+  background: #FFFFFF;
+  width: 440px;
+  max-width: 100%;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.10);
+  overflow: hidden;
+}
+.card-inner { padding: 40px 40px 24px; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   브랜드
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.brand { text-align: center; margin-bottom: 30px; }
+.brand-name {
+  font-size: 24px; font-weight: 800;
+  color: #222222;
+  letter-spacing: .08em; line-height: 1;
+}
+.brand-sub {
+  margin-top: 7px; font-size: 12.5px;
+  color: #AAAAAA; font-weight: 400; letter-spacing: .02em;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   폼 필드
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.field { margin-bottom: 13px; }
+.field-label {
+  display: block; font-size: 12.5px; font-weight: 600;
+  color: #444444; margin-bottom: 6px;
+}
+
+.inp-solo {
+  width: 100%; padding: 10px 12px;
+  border: 1.5px solid #C8C8C8;
+  border-radius: 4px; outline: none;
+  font-family: inherit; font-size: 13.5px; color: #333333;
+  transition: border-color .15s;
+}
+.inp-solo:focus        { border-color: #555555; }
+.inp-solo::placeholder { color: #BBBBBB; }
+.inp-solo.is-error     { border-color: #CC2222; }
+
+.input-wrap {
+  display: flex;
+  border: 1.5px solid #C8C8C8;
+  border-radius: 4px; overflow: hidden;
+  transition: border-color .15s;
+}
+.input-wrap:focus-within { border-color: #555555; }
+.input-wrap.is-error     { border-color: #CC2222; }
+
+.input-wrap input {
+  flex: 1; padding: 10px 12px;
+  border: none; outline: none;
+  font-family: inherit; font-size: 13.5px; color: #333333;
+  background: transparent; min-width: 0;
+}
+.input-wrap input::placeholder { color: #BBBBBB; font-size: 13px; }
+
+.input-inner-btn {
+  flex-shrink: 0; padding: 0 14px;
+  background: #555555; color: #FFFFFF;
+  font-family: inherit; font-size: 12px; font-weight: 600;
+  border: none; border-left: 1px solid #C8C8C8;
+  cursor: pointer; line-height: 1.35; text-align: center;
+  white-space: nowrap; transition: background .15s;
+}
+.input-inner-btn:hover { background: #3A3A3A; }
+
+.input-timer {
+  display: flex; align-items: center;
+  padding: 0 12px; font-size: 13px; font-weight: 700;
+  color: #CC0000; white-space: nowrap; flex-shrink: 0;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   상태 메시지
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.warn-text {
+  text-align: center; font-size: 12px; font-weight: 500;
+  color: #CC2222; margin: 2px 0 10px;
+}
+.error-box {
+  background: #FFF0F0; border: 1px solid #FFBBBB;
+  border-radius: 4px; padding: 8px 12px;
+  font-size: 12.5px; color: #CC2222; font-weight: 500; margin-bottom: 12px;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   버튼
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.btn-submit {
+  display: block; width: 100%; padding: 13px;
+  margin-top: 6px;
+  background: #2B2B2B; color: #FFFFFF;
+  border: none; border-radius: 4px;
+  font-family: inherit; font-size: 14.5px; font-weight: 700;
+  letter-spacing: .06em; cursor: pointer;
+  transition: background .15s;
+}
+.btn-submit:hover    { background: #444444; }
+.btn-submit:active   { background: #111111; }
+.btn-submit:disabled { background: #AAAAAA; cursor: not-allowed; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   카드 하단
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.card-footer { padding: 0 40px 28px; }
+.footer-hr { border: none; border-top: 1px solid #EEEEEE; margin: 14px 0; }
+.footer-contact { text-align: center; font-size: 12px; color: #888888; }
+.footer-link-wrap { text-align: center; }
+.footer-link {
+  font-size: 12.5px; color: #777777;
+  text-decoration: underline; cursor: pointer;
+  background: none; border: none;
+  font-family: inherit; transition: color .15s;
+}
+.footer-link:hover { color: #333333; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   뷰 전환
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.view        { display: none; }
+.view.active { display: block; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   모달 (로그인 화면용)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.35); z-index: 500;
+  align-items: center; justify-content: center;
+}
+.overlay.open { display: flex; }
+
+.modal-card {
+  background: #FFFFFF; border-radius: 4px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.18);
+  width: 400px; max-width: calc(100vw - 32px);
+  padding: 52px 40px 40px;
+  text-align: center;
+  animation: mpop .17s ease both;
+}
+@keyframes mpop {
+  from { opacity: 0; transform: scale(.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.modal-fail-title {
+  font-size: 18px; font-weight: 800;
+  color: #CC2222; letter-spacing: .03em;
+  line-height: 1.55; margin-bottom: 4px;
+}
+.modal-fail-sub {
+  font-size: 13.5px; color: #CC2222;
+  font-weight: 500; line-height: 1.6; margin-bottom: 34px;
+}
+.btn-modal-ok {
+  width: 150px; padding: 12px;
+  background: #2B2B2B; color: #FFFFFF;
+  border: none; border-radius: 4px;
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  letter-spacing: .06em; cursor: pointer;
+  transition: background .15s;
+}
+.btn-modal-ok:hover { background: #444444; }

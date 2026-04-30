@@ -1,0 +1,522 @@
+﻿<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Kiosk - 호텔 안내</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Noto+Serif+KR:wght@300;400;500&family=Noto+Sans+KR:wght@300;400;500&display=swap"
+          rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@400;600&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/customer/kiosk.css}"> <!-- 공통 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/header_main.css}"> <!-- 메인 헤더 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/top_title.css}"> <!-- 최상단 타이틀 css -->
+    <link rel="stylesheet" th:href="@{/css/customer/modal.css}"> <!-- 모달 css -->
+
+    <style>
+        .kiosk {
+            overflow: clip;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+        }
+
+        .center-block {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 3cqw;
+            overflow: hidden;
+        }
+
+        .page-title-bar { margin: 0; }
+
+        /* ── 콘텐츠 ── */
+        .content-area {
+            margin: 0 4cqw;
+        }
+        .content-area::-webkit-scrollbar { display: none; }
+
+        /* ── 예약 정보 카드 ── */
+        .reservation-card {
+            background: var(--surface);
+            border-radius: 2cqw;
+            border: 1px solid var(--border);
+            box-shadow: 0 0.5cqw 2.5cqw var(--shadow);
+            padding: 3cqw;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5cqw;
+        }
+
+        /* 각 항목 행: 원형 아이콘 + 정보 박스 */
+        .info-row {
+            display: flex;
+            align-items: stretch;
+            gap: 2.5cqw;
+        }
+
+        /* 원형 아이콘 */
+        .info-avatar {
+            width: 9cqw;
+            height: 9cqw;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            flex-shrink: 0;
+            align-self: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-avatar svg {
+            width: 4.5cqw;
+            height: 4.5cqw;
+            color: var(--green);
+        }
+
+        /* 정보 박스 */
+        .info-box {
+            flex: 1;
+            border: 1px solid var(--border);
+            border-radius: 1.2cqw;
+            padding: 1.8cqw 2.5cqw;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6cqw;
+            background: var(--surface);
+        }
+
+        .info-label {
+            font-size: 3cqw;
+            font-weight: 400;
+            color: var(--text-sub);
+            letter-spacing: 0.02em;
+        }
+
+        .info-value {
+            font-size: 3.7cqw;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: 0.02em;
+            line-height: 1.4;
+            margin-bottom: 1cqw;
+            margin-top: 1cqw;
+        }
+
+        .info-value-sub {
+            font-size: 2.7cqw;
+            font-weight: 400;
+            color: var(--text-sub);
+        }
+
+        /* ── 하단 푸터 ── */
+        .footer {
+            min-height: 25cqw;
+            padding: 3cqw 4cqw 4cqw;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5cqw;
+            animation: fadeUp 0.4s ease both 0.35s; opacity: 0;
+        }
+
+        /* a. 체크인 불가: 비활성 버튼 + 안내문구 */
+        .btn-checkin-disabled {
+            width: 100%;
+            font-size: 4cqw; font-weight: 500;
+            color: #fff; background: #888;
+            border: none; border-radius: 1.8cqw;
+            padding: 3.5cqw; cursor: not-allowed;
+            letter-spacing: 0.06em;
+            box-shadow: none;
+        }
+
+        .checkin-notice {
+            background: #616060;
+            border-radius: 1.2cqw;
+            padding: 1.8cqw 3cqw;
+            text-align: center;
+            font-size: 2.6cqw; font-weight: 400;
+            color: #fff;
+            letter-spacing: 0.03em;
+        }
+
+        /* b. 체크인 가능: 활성 버튼 */
+        .btn-checkin-active {
+            width: 100%;
+            font-size: 4cqw; font-weight: 500;
+            color: #fff; background: #2e2e2e;
+            border: none; border-radius: 1.8cqw;
+            padding: 3.5cqw; cursor: pointer;
+            letter-spacing: 0.06em;
+            box-shadow: 0 1cqw 3cqw rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+        .btn-checkin-active:hover  { background: #1a1a1a; }
+        .btn-checkin-active:active { transform: scale(0.99); }
+
+        /* c. 재결제: 경고박스 + 재결제 버튼 */
+        .repay-warning {
+            background: #fff0f0;
+            border-radius: 1.2cqw;
+            padding: 2cqw 3cqw;
+            font-size: 2.8cqw; font-weight: 600;
+            color: var(--red);
+            letter-spacing: 0.02em;
+        }
+
+        .btn-repay {
+            width: 100%;
+            font-size: 4cqw; font-weight: 500;
+            color: #fff; background: var(--red);
+            border: none; border-radius: 1.8cqw;
+            padding: 3.5cqw; cursor: pointer;
+            letter-spacing: 0.06em;
+            box-shadow: 0 1cqw 3cqw rgba(192,57,43,0.3);
+            transition: all 0.2s ease;
+        }
+        .btn-repay:hover  { background: var(--red-dark); }
+        .btn-repay:active { transform: scale(0.99); }
+
+        /* 숨김 유틸 */
+        .hidden { display: none !important; }
+
+        /* ── 애니메이션 ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(2cqw); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .header         { animation: fadeUp 0.4s ease both 0.05s; opacity: 0; }
+        .page-title-bar { animation: fadeUp 0.4s ease both 0.15s; opacity: 0; }
+
+        /* ── 상태 전환 버튼 (테스트용) ── */
+        .state-switcher {
+            position: absolute;
+            top: 3cqw; right: 4cqw;
+            display: flex; gap: 1cqw;
+            z-index: 10;
+        }
+        .state-btn {
+            font-size: 2cqw; padding: 0.8cqw 1.5cqw;
+            border: 1px solid var(--border);
+            border-radius: 0.8cqw;
+            background: var(--surface);
+            cursor: pointer;
+            color: var(--text-sub);
+        }
+        .state-btn.on { background: var(--green); color: #fff; border-color: var(--green); }
+
+    </style>
+</head>
+<body>
+
+<div class="kiosk">
+
+    <!-- 상단 네비 -->
+    <div class="header">
+        <div class="header-left">
+            <button class="btn-home" onclick="goHome()">홈</button>
+            <div class="tab-bar">
+                <button class="tab active" onclick="goInfo()">호텔 안내</button>
+            </div>
+        </div>
+
+        <button class="btn-back" onclick="goBack()">
+            <svg class="back-icon" viewBox="0 0 24 24">
+                <path d="M11.67 3.87L9.9 2.1 0 12l9.9 9.9 1.77-1.77L3.54 12z" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="center-block">
+        <!-- 페이지 타이틀 바 -->
+        <div class="page-title-bar">
+            <div class="page-title-ko">체크인</div>
+            <div class="page-title-en">RESERVATION DETAIL</div>
+        </div>
+
+        <!-- 콘텐츠 영역 -->
+        <div class="content-area" th:if="${reservation != null}">
+            <div class="reservation-card">
+
+                <!-- 예약자 명 -->
+                <div class="info-row">
+                    <div class="info-avatar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                    <div class="info-box">
+                        <span class="info-label">예약자 명</span>
+                        <span class="info-value" th:text="${reservation.memberName}"></span>
+                    </div>
+                </div>
+
+                <!-- 연락처 -->
+                <div class="info-row">
+                    <div class="info-avatar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.5 2 2 0 0 1 3.59 1.3h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        </svg>
+                    </div>
+                    <div class="info-box">
+                        <span class="info-label">연락처</span>
+                        <span class="info-value" th:text="${reservation.memberPhone}"></span>
+                    </div>
+                </div>
+
+                <!-- 숙박 기간 -->
+                <div class="info-row">
+                    <div class="info-avatar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </div>
+                    <div class="info-box">
+                        <span class="info-label">숙박 기간</span>
+                        <span class="info-value" th:text="${reservation.checkinDate} + ' ~ ' + ${reservation.checkoutDate}"></span>
+                    </div>
+                </div>
+
+                <!-- 예약 객실 -->
+                <div class="info-row">
+                    <div class="info-avatar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M3 3h18v18H3z" rx="1"/>
+                            <path d="M9 21V9h6v12"/>
+                            <path d="M3 9h18"/>
+                            <circle cx="12" cy="6" r="1" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <div class="info-box">
+                        <span class="info-label">예약 객실</span>
+                        <span class="info-value" th:text="${reservation.roomNo} + '호 ' + ${reservation.roomName}"></span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- 하단 푸터: 상태에 따라 다른 버튼 표시 -->
+    <div class="footer">
+
+        <!-- a. 체크인 불가 시간 -->
+        <div id="stateA">
+            <div class="checkin-notice" id="noticeText">YYYY-MM-DD 오후 2시부터 체크인 가능합니다.</div>
+            <div style="margin-top:1.5cqw;">
+                <button class="btn-checkin-disabled">체크인</button>
+            </div>
+        </div>
+
+        <!-- b. 체크인 가능 -->
+        <div id="stateB" class="hidden">
+            <button class="btn-checkin-active" onclick="doCheckin()">체크인</button>
+        </div>
+
+        <!-- c. 재결제 필요 -->
+        <div id="stateC" class="hidden">
+            <div class="repay-warning">재결제가 필요한 예약입니다.</div>
+            <div style="margin-top:1.5cqw;">
+                <button class="btn-repay" onclick="doRepay()">재결제</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 주차 등록 여부 모달 -->
+    <div class="modal-overlay hidden" id="parkingModal">
+        <div class="modal-box">
+            <span class="modal-msg">주차 등록 하시겠습니까?</span>
+            <div class="modal-btns">
+                <button class="btn-modal-yes" onclick="openParkingInput()">예</button>
+                <button class="btn-modal-no"  onclick="skipParking()">아니오</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 차량 번호 입력 모달 -->
+    <div class="modal-overlay hidden" id="parkingInputModal">
+        <div class="modal-box">
+            <span class="modal-msg">차량 번호 4자리를 입력해 주세요.</span>
+            <input type="text" id="parkingNumInput" maxlength="4"
+                   style="font-size:3.5cqw; text-align:center; border:1px solid var(--border);
+                          border-radius:1.2cqw; padding:2cqw; width:100%;">
+            <div class="modal-btns" style="grid-template-columns:1fr;">
+                <button class="btn-modal-yes" onclick="submitCheckin()">확 인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 재결제 오류 알림 모달 -->
+    <div class="modal-overlay hidden" id="repayErrorModal">
+        <div class="modal-box">
+            <span class="modal-msg" id="repayErrorMsg">재결제 정보를 불러오는 중 오류가 발생했습니다.</span>
+            <div class="modal-btns" style="grid-template-columns: 1fr;">
+                <button class="btn-modal-yes" onclick="closeRepayErrorModal()">확 인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 체크인 완료 알림 모달 -->
+    <div class="modal-overlay hidden" id="checkinCompleteModal">
+        <div class="modal-box">
+            <span class="modal-msg" style="white-space: pre-line;">체크인이 완료되었습니다.</span>
+            <div class="modal-btns" style="grid-template-columns: 1fr;">
+                <button class="btn-modal-yes" onclick="goToMain()">확 인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 타임아웃 모달 -->
+    <div class="modal-overlay hidden" id="timeoutModal">
+        <div class="modal-box">
+            <p><span id="timeoutSec">10</span>초 후<br>초기 화면으로 돌아갑니다.</p>
+            <div class="modal-sub-msg">
+                계속 진행하시려면 화면을 클릭해 주세요.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/customer/modal.js}"></script>
+<script th:src="@{/js/customer/timeout.js}"></script>
+<script th:inline="javascript">
+    // Thymeleaf에서 예약 데이터 전달 -> SMS 예약문자 전송용
+    const checkinDateStr  = [[${reservation != null ? reservation.checkinDate  : null}]];
+    const reservationId   = [[${reservation != null ? reservation.reservationId : null}]];
+    const payStatus       = [[${reservation != null ? reservation.payStatus     : null}]];
+    const memberPhone     = [[${reservation != null ? reservation.memberPhone   : null}]];
+    const memberName      = [[${reservation != null ? reservation.memberName    : null}]];
+
+    function setState(s) {
+        ['A','B','C'].forEach(function(x) {
+            let stateEl = document.getElementById('state' + x);
+            let btnEl   = document.getElementById('btn'   + x);
+            if (stateEl) stateEl.classList.add('hidden');
+            if (btnEl)   btnEl.classList.remove('on');
+        });
+
+        let activeState = document.getElementById('state' + s.toUpperCase());
+        let activeBtn   = document.getElementById('btn' + s);
+        if (activeState) activeState.classList.remove('hidden');
+        if (activeBtn)   activeBtn.classList.add('on');
+    }
+
+    function openRepayErrorModal(msg) {
+        document.getElementById('repayErrorMsg').textContent = msg || '오류가 발생했습니다. 관리자에게 문의 해주세요.';
+        document.getElementById('repayErrorModal').classList.remove('hidden');
+    }
+
+    function initCheckinState() {
+        // Success 제외(Refund, Waiting, Failed) 재결제
+        if (payStatus !== 'Success') {
+            setState('c');
+            return;
+        }
+
+        const now = new Date();
+
+        // 체크인 가능 시각: 예약일 14:00
+        const checkinAvailable = new Date(checkinDateStr + 'T14:00:00');
+
+        // 오늘이 체크인 날짜이고 14시 이후인지 확인
+        const todayStr = now.toISOString().slice(0, 10); // "YYYY-MM-DD"
+
+        if (todayStr === checkinDateStr && now >= checkinAvailable) {
+            setState('b');
+        } else {
+            setState('a');
+            const notice = document.getElementById('noticeText');
+            if (notice) {
+                notice.textContent = checkinDateStr + ' 오후 2시부터 체크인 가능합니다.';
+            }
+        }
+    }
+
+    function doCheckin() {
+        sessionStorage.setItem('guestInfo', JSON.stringify({
+            guestPhone: memberPhone,
+            guestName:  memberName
+        }));
+        document.getElementById('parkingModal').classList.remove('hidden');
+    }
+
+    function skipParking() {
+        document.getElementById('parkingModal').classList.add('hidden');
+        processCheckin(null);
+    }
+
+    function openParkingInput() {
+        document.getElementById('parkingModal').classList.add('hidden');
+        document.getElementById('parkingInputModal').classList.remove('hidden');
+    }
+
+    function submitCheckin() {
+        let parkingNum = document.getElementById('parkingNumInput').value.trim();
+        document.getElementById('parkingInputModal').classList.add('hidden');
+        processCheckin(parkingNum);
+    }
+
+    function processCheckin(parkingNum) {
+        fetch("/JHotel/checkin/do", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "reservationId=" + reservationId + "&parkingNum=" + (parkingNum || "")
+        })
+        .then(function(res) { return res.text(); })
+        .then(function(result) {
+            if (result === "success") {
+                document.getElementById('checkinCompleteModal').classList.remove('hidden');
+            } else {
+                openRepayErrorModal("오류가 발생했습니다. 관리자에게 문의 해주세요.");
+            }
+        })
+        .catch(function() {
+            openRepayErrorModal("오류가 발생했습니다. 관리자에게 문의 해주세요.");
+        });
+    }
+
+    function goToMain() {
+        window.location.href = "/JHotel/main";
+    }
+
+    function closeRepayErrorModal() {
+        document.getElementById('repayErrorModal').classList.add('hidden');
+    }
+
+    function doRepay() {
+        fetch("/JHotel/checkin/repay-info?reservationId=" + reservationId)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                sessionStorage.setItem('reservation',   JSON.stringify({ reservationId: reservationId }));
+                sessionStorage.setItem('selectedRooms', JSON.stringify(data.selectedRooms));
+                sessionStorage.setItem('roomPrice',     data.roomPrice);
+                sessionStorage.setItem('optionCharge',  data.optionCharge);
+                sessionStorage.setItem('checkinDate',   data.checkinDate);
+                sessionStorage.setItem('checkoutDate',  data.checkoutDate);
+                sessionStorage.setItem('guestInfo',     JSON.stringify(data.guestInfo));
+                sessionStorage.setItem('paySource',     'repay');
+
+                // 재결제 완료 후 돌아올 URL(체크인 페이지)
+                sessionStorage.setItem('afterPayUrl', '/JHotel/checkin/reservation_detail?reservationId=' + reservationId);
+
+                window.location.href = '/JHotel/pay';
+            })
+            .catch(function() {
+                openRepayErrorModal('오류가 발생했습니다. 관리자에게 문의 해주세요.');
+            });
+    }
+    function goHome()    { alert('메인 화면으로 이동'); }
+
+    // 페이지 로드 시 자동으로 체크인 상태 판별
+    window.addEventListener('DOMContentLoaded', initCheckinState);
+</script>
+<script th:src="@{/js/customer/header.js}"></script>
+</body>
+</html>

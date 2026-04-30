@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hotel_kiosk.mapper.admin.OptionMapper">
+    <!-- 옵션 정책 등록 -->
+    <insert id="insert">
+        INSERT INTO option_master (option_name, option_category, option_target, option_price)
+        VALUES (#{optionName}, #{optionCategory}, #{optionTarget}, #{optionPrice})
+    </insert>
+
+    <!-- 옵션 정책 목록 -->
+    <select id="selectAll" resultType="hotel_kiosk.domain.admin.OptionsMaster">
+        SELECT *
+        FROM option_master
+        ORDER BY option_category
+    </select>
+
+    <!-- 옵션 정책 조회 -->
+    <select id="selectOne" resultType="hotel_kiosk.domain.admin.OptionsMaster">
+        SELECT *
+        FROM option_master
+        WHERE option_id = #{optionId}
+    </select>
+
+    <!-- 옵션 정책 수정 -->
+    <update id="update">
+        UPDATE option_master
+        <set>
+            <if test="optionName != null">
+                option_name = #{optionName},
+            </if>
+            <if test="optionCategory != null">
+                option_category = #{optionCategory},
+            </if>
+            <if test="optionTarget != null">
+                option_target = #{optionTarget},
+            </if>
+            <if test="optionPrice != null">
+                option_price = #{optionPrice},
+            </if>
+        </set>
+        WHERE option_id = #{optionId}
+    </update>
+
+    <!-- 옵션 카테고리 조회 -->
+    <select id="findCategory" resultType="hotel_kiosk.domain.admin.OptionsMaster">
+        SELECT option_category
+        FROM option_master
+        WHERE option_id = #{optionId}
+    </select>
+    
+    <select id="sumOptionCharge">
+        SELECT IFNULL(SUM(option_charge), 0)
+        FROM options_record
+        WHERE idx = #{reservationId}
+    </select>
+</mapper>

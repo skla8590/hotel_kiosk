@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hotel_kiosk.mapper.customer.ExtendedReservationMapper">
+    <!-- 예약번호로 연장 가능한 예약 조회 -->
+    <select id="selectReservationById" resultType="hotel_kiosk.domain.customer.Reservations">
+        SELECT * FROM reservations WHERE reservation_id = #{reservationId} AND checkout_date > CURDATE() AND status IN ('Reserved', 'IN');
+    </select>
+
+    <!-- '예약 정보의 객실번호 = 객실 테이블의 객실번호'인 객실 정보 들고 오기 -->
+    <select id="selectReservationDetail" resultType="hotel_kiosk.dto.customer.AvailableRoomForExtendedDTO">
+        SELECT r.reservation_id, r.checkin_date, r.checkout_date, r.room_no,
+               m.member_name, m.member_phone, rm.room_name, rm.image_url, rm.room_view
+        FROM reservations r
+                 JOIN members m ON r.member_no = m.member_no
+                 JOIN room_master rm ON r.room_no = rm.room_no
+        WHERE r.reservation_id = #{reservationId} AND r.checkout_date > CURDATE();
+
+    </select>
+
+    <!-- 해당 객실이 체크인, 체크아웃 날짜에 숙박이 가능한지 판단 -->
+    <select id="selectAvailableRoom" resultType="int">
+        <![CDATA[
+        SELECT COUNT(*) FROM reservations WHERE room_no = #{reservations.roomNo}
+        AND status IN ('Reserved', 'IN') AND reservation_id != #{reservations.reservationId}
+        AND checkin_date < #{reservations.checkoutDate} AND checkout_date > #{reservations.checkinDate};
+        ]]>
+    </select>
+
+    <!-- 고객이 예약한 객실의 객실 정보(room_master) 들고 오기 -->
+    <select id="selectRoomInfo" resultType="hotel_kiosk.domain.admin.RoomMaster">
+        SELECT * FROM room_master WHERE room_no = #{roomNo};
+    </select>
+
+    <!-- 예약 고객 정보(members) 불러오기 -->
+    <select id="selectMemberInfo" resultType="hotel_kiosk.domain.customer.Members">
+        SELECT * FROM members WHERE member_no = #{memberNo};
+    </select>
+
+    <!-- 추가 예약금 결제용 기존 결제 금액 불러오기 -->
+    <select id="selectPaymentAmount" resultType="int">
+        SELECT total_charge FROM payments WHERE reservation_id = #{reservationId} AND pay_status = 'Success';
+    </select>
+
+    <!-- 해당 객실 숙박 연장 처리 (체크아웃 날짜 변경) -->
+    <update id="updateCheckoutDate">
+        UPDATE reservations SET checkout_date = #{newCheckoutDate} WHERE reservation_id = #{reservationId};
+    </update>
+</mapper>

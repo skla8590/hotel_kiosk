@@ -1,0 +1,156 @@
+/* 모든 모달 공통 */
+/* 모달 오버레이 */
+.modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-overlay.hidden { display: none; }
+
+.modal-box {
+    background: var(--surface);
+    border-radius: 2.5cqw;
+    padding: 5cqw 5cqw 4cqw;
+    width: 70%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4cqw;
+    box-shadow: 0 4cqw 12cqw rgba(0,0,0,0.3);
+}
+
+.modal-msg {
+    font-size: 3.2cqw;
+    font-weight: 500;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.7;
+    letter-spacing: 0.02em;
+}
+
+.modal-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2cqw;
+    width: 100%;
+}
+
+.btn-modal-no {
+    font-size: 3.2cqw; font-weight: 500;
+    color: var(--text); background: #e0e0e0;
+    border: none; border-radius: 1.5cqw;
+    padding: 2.8cqw; cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-modal-no:hover  { background: #cacaca; }
+.btn-modal-no:active { transform: scale(0.98); }
+
+.btn-modal-yes {
+    font-size: 3.2cqw; font-weight: 500;
+    color: #fff; background: #2e2e2e;
+    border: none; border-radius: 1.5cqw;
+    padding: 2.8cqw; cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-modal-yes:hover  { background: #1a1a1a; }
+.btn-modal-yes:active { transform: scale(0.98); }
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+
+/* 타임아웃 모달 css */
+#timeoutModal.modal-overlay {
+    z-index: 999;
+}
+
+#timeoutModal .modal-box {
+    width: 70%;
+    min-width: 70%;
+    max-width: 70%;
+    padding: 6cqw 8cqw;
+    border-radius: 2.5cqw;
+    gap: 2cqw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#timeoutModal p {
+    text-align: center;
+    margin: 0;
+}
+
+#timeoutModal .modal-msg {
+    display: block;
+    width: 100%;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 3.2cqw;
+    font-weight: 700;
+    margin: 0;
+}
+
+#timeoutModal .modal-sub-msg {
+    font-size: 3cqw;
+    color: #666;
+    text-align: center;
+    margin-top: 1cqw;
+}
+
+#timeoutModal #timeoutSec {
+    font-weight: 800;
+    margin-right: 0.5cqw;
+}
+
+
+
+/**** 웨이크 모달 전용 ****/
+.wake-modal-icon {
+    width: 10cqw;
+    height: 10cqw;
+    object-fit: contain;
+}
+
+/* 볼륨 바 */
+.voice-bars {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8cqw;
+    height: 8cqw;
+}
+
+.voice-bars span {
+    display: inline-block;
+    width: 1.2cqw;
+    height: 1.5cqw;
+    background: var(--green);
+    border-radius: 1cqw;
+    animation: voiceBar 1s ease-in-out infinite;
+}
+
+/* 각 바마다 타이밍 다르게 해서 자연스럽게 */
+.voice-bars span:nth-child(1) { animation-delay: 0.0s; }
+.voice-bars span:nth-child(2) { animation-delay: 0.1s; }
+.voice-bars span:nth-child(3) { animation-delay: 0.2s; }
+.voice-bars span:nth-child(4) { animation-delay: 0.3s; }
+.voice-bars span:nth-child(5) { animation-delay: 0.4s; }
+.voice-bars span:nth-child(6) { animation-delay: 0.3s; }
+.voice-bars span:nth-child(7) { animation-delay: 0.2s; }
+.voice-bars span:nth-child(8) { animation-delay: 0.1s; }
+.voice-bars span:nth-child(9) { animation-delay: 0.0s; }
+
+@keyframes voiceBar {
+    0%, 100% { height: 1.5cqw; }
+    50%       { height: 7cqw;   }
+}

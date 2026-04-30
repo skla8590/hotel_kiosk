@@ -1,0 +1,345 @@
+﻿<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotel Kiosk - 호텔 안내</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Noto+Serif+KR:wght@300;400;500&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/customer/kiosk.css}"> <!-- 공통 css -->
+  <link rel="stylesheet" th:href="@{/css/customer/header_main.css}"> <!-- 메인 헤더 css -->
+  <link rel="stylesheet" th:href="@{/css/customer/top_title.css}"> <!-- 최상단 타이틀 css -->
+  <link rel="stylesheet" th:href="@{/css/customer/modal.css}">
+
+  <style>
+    .kiosk { display: grid; grid-template-rows: auto auto 1fr auto; }
+
+    /* ── 콘텐츠 영역 ── */
+    .content-area {
+      margin: 3cqw 4cqw 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── 게시판 뷰 ── */
+    .board-view {
+      flex: 1;
+      background: var(--surface);
+      border-radius: 2cqw;
+      border: 1px solid var(--border);
+      box-shadow: 0 0.6cqw 3cqw var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 게시판 헤더 행 */
+    .board-head {
+      display: grid;
+      grid-template-columns: 8cqw 1fr 12cqw 13cqw;
+      padding: 2.2cqw 3cqw;
+      background: #f8f7f4;
+      border-bottom: 1px solid var(--border);
+      font-size: 2.4cqw;
+      font-weight: 600;
+      color: var(--text-sub);
+      letter-spacing: 0.04em;
+    }
+
+    /* 게시글 목록 */
+    .board-list {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+
+    .board-list::-webkit-scrollbar { display: none; }
+
+    .board-row {
+      display: grid;
+      grid-template-columns: 8cqw 1fr 12cqw 13cqw;
+      padding: 2.4cqw 3cqw;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      align-items: center;
+    }
+
+    .board-row:last-child { border-bottom: none; }
+
+    .board-row:hover { background: #f5faf7; }
+
+    .board-row:hover .row-title { color: var(--green); }
+
+    .row-no {
+      font-size: 2.4cqw;
+      color: var(--text-sub);
+      font-weight: 400;
+    }
+
+    .row-title {
+      font-size: 2.8cqw;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-right: 2cqw;
+      transition: color 0.15s ease;
+    }
+
+    .row-writer {
+      font-size: 2.4cqw;
+      color: var(--text-sub);
+    }
+
+    .row-date {
+      font-size: 2.2cqw;
+      color: var(--text-sub);
+    }
+
+    /* ── 상세 뷰 (클릭 시 표시) ── */
+    .detail-view {
+      flex: 1;
+      background: var(--surface);
+      border-radius: 2cqw;
+      border: 1px solid var(--border);
+      box-shadow: 0 0.6cqw 3cqw var(--shadow);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .detail-view.visible { display: flex; }
+
+    .detail-header {
+      padding: 3cqw;
+      border-bottom: 1px solid var(--border);
+      background: #f8f7f4;
+    }
+
+    .detail-title {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 3.8cqw;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.4;
+      margin-bottom: 1.5cqw;
+    }
+
+    .detail-meta {
+      display: flex;
+      gap: 3cqw;
+      font-size: 2.2cqw;
+      color: var(--text-sub);
+    }
+
+    .detail-meta span { display: flex; gap: 0.8cqw; }
+
+    .detail-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 3cqw;
+      font-size: 2.8cqw;
+      line-height: 1.9;
+      color: var(--text);
+      scrollbar-width: none;
+    }
+
+    .detail-body::-webkit-scrollbar { display: none; }
+
+    .detail-back {
+      padding: 2cqw 3cqw;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .btn-detail-back {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 2.4cqw;
+      font-weight: 600;
+      color: #fff;
+      background: #2e2e2e;
+      border: none;
+      border-radius: 1.2cqw;
+      padding: 1.2cqw 2.8cqw;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 0.3cqw 1cqw rgba(0,0,0,0.15);
+    }
+
+    .btn-detail-back:hover {
+      background: #1a1a1a;
+    }
+
+    /* ── 하단 이전으로 버튼 (main의 status-bar 구조 재활용) ── */
+    .footer {
+      padding: 3cqw 4cqw 4cqw;
+    }
+
+    .btn-prev {
+      width: 100%;
+      font-size: 4cqw;
+      font-weight: 500;
+      color: #fff;
+      background: #616060;
+      border: none;
+      border-radius: 2cqw;
+      padding: 3.5cqw;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      box-shadow: 0 1cqw 3cqw rgba(0,0,0,0.18);
+      transition: all 0.2s ease;
+    }
+
+    .btn-prev:hover {
+      background: #1a1a1a;
+      box-shadow: 0 1.5cqw 4cqw rgba(0,0,0,0.28);
+    }
+
+    .btn-prev:active { transform: scale(0.99); }
+
+    /* ── 입장 애니메이션 ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(2cqw); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .header        { animation: fadeUp 0.4s ease both 0.05s; opacity: 0; }
+    .page-title-bar { animation: fadeUp 0.4s ease both 0.15s; opacity: 0; }
+    .content-area  { animation: fadeUp 0.4s ease both 0.25s; opacity: 0; }
+    .footer        { animation: fadeUp 0.4s ease both 0.35s; opacity: 0; }
+  </style>
+</head>
+<body>
+
+<div class="kiosk">
+
+  <!-- 상단 네비 -->
+  <div class="header">
+    <button class="btn-home" onclick="goHome()">홈</button>
+    <div class="tab-bar">
+      <button class="tab active">호텔 안내</button>
+    </div>
+  </div>
+
+  <!-- 페이지 타이틀 바 -->
+  <div class="page-title-bar">
+    <div class="page-title-ko">호텔 안내</div>
+    <div class="page-title-en">HOTEL INSTRUCTION</div>
+  </div>
+
+  <!-- 콘텐츠 영역 -->
+  <div class="content-area">
+
+    <!-- 게시판 목록 -->
+    <div class="board-view" id="boardView">
+      <div class="board-head">
+        <span>No</span>
+        <span>Title</span>
+        <span>Writer</span>
+        <span>Date</span>
+      </div>
+      <div class="board-list" id="boardList"></div>
+    </div>
+
+    <!-- 게시글 상세 -->
+    <div class="detail-view" id="detailView">
+      <div class="detail-header">
+        <div class="detail-title" id="detailTitle"></div>
+        <div class="detail-meta">
+          <span>작성자 <strong id="detailWriter"></strong></span>
+          <span>날짜 <strong id="detailDate"></strong></span>
+        </div>
+      </div>
+      <div class="detail-body" id="detailBody"></div>
+    </div>
+
+  </div>
+
+  <!-- 하단 이전으로 -->
+  <div class="footer">
+    <button class="btn-prev" onclick="goBack()">이전으로</button>
+  </div>
+
+  <!-- 타임아웃 모달 -->
+  <div class="modal-overlay hidden" id="timeoutModal">
+    <div class="modal-box">
+      <p><span id="timeoutSec">10</span>초 후<br>메인 화면으로 돌아갑니다.</p>
+      <div class="modal-sub-msg">
+        계속 진행하시려면 화면을 클릭해 주세요.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script th:src="@{/js/customer/modal.js}"></script>
+<script th:src="@{/js/customer/timeout.js}"></script>
+<script th:inline="javascript">
+  /* ── 서버 데이터 바인딩 ── */
+  const posts = JSON.parse(/*[[${informBoardsJson}]]*/ '[]');
+
+  /* ── 날짜 포맷 함수 ── */
+  function formatDate(d) {
+    if (!d) return '';
+    if (Array.isArray(d)) {
+      const [y, m, day] = d;
+      return `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    }
+    return d;
+  }
+  function renderBoard() {
+    const list = document.getElementById('boardList');
+    list.innerHTML = posts.map(p => `
+            <div class="board-row" onclick="showDetail(${p.informId})">
+                <span class="row-no">${p.informId}</span>
+                <span class="row-title">${p.title}</span>
+                <span class="row-writer">${p.writer}</span>
+                <span class="row-date">${formatDate(p.regDate)}</span>
+            </div>
+        `).join('');
+  }
+
+  /* ── 상세 보기 ── */
+  function showDetail(id) {
+    const post = posts.find(p => p.informId === id);
+    if (!post) return;
+
+    document.getElementById('detailTitle').textContent  = post.title;
+    document.getElementById('detailWriter').textContent = post.writer;
+    document.getElementById('detailDate').textContent   = formatDate(post.regDate);
+    document.getElementById('detailBody').innerHTML =
+            post.content.split('\n').map(line => `<p>${line}</p>`).join('');
+
+    document.getElementById('boardView').style.display  = 'none';
+    document.getElementById('detailView').classList.add('visible');
+
+    // 하단 버튼을 '목록으로' 변경
+    const prevBtn = document.querySelector('.btn-prev');
+    prevBtn.textContent = "목록으로";
+    prevBtn.onclick = showBoard; // 클릭 시 목록 함수 실행
+  }
+
+  /* ── 목록으로 돌아가기 ── */
+  function showBoard() {
+    document.getElementById('detailView').classList.remove('visible');
+    document.getElementById('boardView').style.display = 'flex';
+
+    // 하단 버튼을 다시 원래 '이전으로' 으로 복구
+    const prevBtn = document.querySelector('.btn-prev');
+    prevBtn.textContent = "이전으로";
+    prevBtn.onclick = function() {
+      window.history.back(); // 또는 기존에 설정된 이전 페이지 이동 함수
+    };
+  }
+
+  renderBoard();
+</script>
+<script th:src="@{/js/customer/header.js}"></script>
+<script th:src="@{/js/customer/goBack.js}"></script>
+</body>
+</html>

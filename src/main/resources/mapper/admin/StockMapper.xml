@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hotel_kiosk.mapper.admin.StockMapper">
+    <!-- 재고 등록 -->
+    <insert id="insertStock">
+        INSERT INTO hotel_kiosk.stocks (stock_name, stock_count, min_stock)
+        VALUES (#{stockName}, #{stockCount}, #{minStock})
+    </insert>
+
+    <!-- 재고 목록 -->
+    <select id="findAllStock" resultType="hotel_kiosk.domain.admin.Stocks">
+        SELECT *
+        FROM hotel_kiosk.stocks
+        ORDER BY stock_id
+    </select>
+
+    <!-- 재고 경보 조회 -->
+    <select id="findStockByWarning" resultType="hotel_kiosk.domain.admin.Stocks">
+        SELECT *
+        FROM hotel_kiosk.stocks
+        WHERE stock_status = 'Shortage'
+    </select>
+
+    <!-- 재고 품목 조회 -->
+    <select id="findStockByName" resultType="hotel_kiosk.domain.admin.Stocks">
+        SELECT *
+        FROM hotel_kiosk.stocks
+        WHERE stock_name LIKE CONCAT('%', #{stockName}, '%')
+    </select>
+
+    <!-- 재고 상태 조회 -->
+    <select id="findStockByStatus" resultType="hotel_kiosk.domain.admin.Stocks">
+        SELECT *
+        FROM hotel_kiosk.stocks
+        WHERE stock_status = #{stockStatus}
+    </select>
+
+    <!-- 재고 수량 수정 -->
+    <update id="updateStockUp">
+        UPDATE hotel_kiosk.stocks
+        SET stock_count = (stock_count + 1)
+        WHERE stock_id = #{stockId}
+    </update>
+    <update id="updateStockDown">
+        UPDATE hotel_kiosk.stocks
+        SET stock_count = (stock_count - 1)
+        WHERE stock_id = #{stockId}
+    </update>
+    <update id="updateStock">
+        UPDATE hotel_kiosk.stocks
+        SET stock_count = #{stockCount}, min_stock = #{minStock}
+        WHERE stock_id = #{stockId}
+    </update>
+
+    <!-- 재고 상태 변경 -->
+    <update id="updateStockStatus">
+        UPDATE hotel_kiosk.stocks
+        SET stock_status = CASE
+        WHEN stock_count >= min_stock THEN 'Clear'          -- 양호
+        WHEN min_stock > stock_count THEN 'Shortage'        -- 부족
+        END;
+    </update>
+
+    <!-- 재고 삭제 -->
+    <delete id="deleteStock">
+        DELETE FROM hotel_kiosk.stocks
+        WHERE stock_id = #{stockId}
+    </delete>
+</mapper>
