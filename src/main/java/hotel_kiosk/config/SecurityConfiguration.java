@@ -45,17 +45,6 @@ public class SecurityConfiguration {
         http
                 .userDetailsService(adminDetailsService)
 
-                /* 클로드 - 아예 Security 설정에서 고객(customer) 관련 경로는 CSRF 검증을 제외하는 게 맞아요.
-                고객 키오스크는 세션 기반 인증이 필요 없으니까요. */
-
-                /* ───────── 고객 경로 CSRF 제외 (키오스크는 세션 인증 불필요) ───────── */
-                // todo(JHL) url 정리되면 "/JHotel/**" 있으면 될 듯?!
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers(
-                                "/onsite/**", "/pay/**", "/checkin/**", "/JHotel/**", "/extended/**"
-                        )
-                )
-
                 /* ───────────── 접근 권한 설정 ──────────────── */
                 .authorizeHttpRequests(auth -> auth
 
@@ -66,7 +55,8 @@ public class SecurityConfiguration {
                                 "/img/**",
                                 "/css/**",
                                 "/js/**",
-                                "/api/admin/email/**"
+                                "/api/admin/email/**",
+                                "/api/kiosk/**"
                         ).permitAll()
 
                         // 통계·리포트, 계정 관리 → 최고 관리자만
@@ -81,6 +71,13 @@ public class SecurityConfiguration {
 
                         // 나머지 요청도 인증 필요
                         .anyRequest().permitAll()
+                )
+
+                /* ───────── 고객 경로 CSRF 제외 ───────── */
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers(
+                                "/onsite/**", "/pay/**", "/checkin/**", "/JHotel/**", "/extended/**", "/api/kiosk/**"
+                        )
                 )
 
                 /* ─────────────── 로그인 설정 ────────────────── */

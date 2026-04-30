@@ -31,10 +31,10 @@ import java.util.Map;
 
 /**
  * 고객 키오스크 화면 전용 REST API 명세서 (Swagger)
-
+ * <p>
  * 실제 로직은 customer 패키지의 각 Controller에 구현되어 있으며,
  * 본 파일은 Swagger API 문서화를 위한 명세 전용 Controller입니다.
-
+ * <p>
  * - CheckInController          → /JHotel/checkin
  * - OnSiteReservationController → /JHotel/onsite
  * - ExtendedReservationController → /JHotel/extended
@@ -66,7 +66,7 @@ public class APIController {
     })
     @GetMapping("/checkin/search")
     public ResponseEntity<ReservationsDTO> searchReservation(
-            @Parameter(description = "예약번호", required = true, example = "RES20250001")
+            @Parameter(description = "예약번호", required = true, example = "260504-755472")
             @RequestParam String reservationId) {
 
         log.info("[API명세] 예약 조회 - reservationId={}", reservationId);
@@ -85,7 +85,7 @@ public class APIController {
     })
     @GetMapping("/checkin/repay-info")
     public ResponseEntity<Map<String, Object>> getRepayInfo(
-            @Parameter(description = "예약번호", required = true, example = "RES20250001")
+            @Parameter(description = "예약번호", required = true, example = "260504-755472")
             @RequestParam String reservationId) {
 
         log.info("[API명세] 재결제 정보 조회 - reservationId={}", reservationId);
@@ -107,7 +107,7 @@ public class APIController {
     })
     @PostMapping("/checkin/do")
     public ResponseEntity<String> doCheckIn(
-            @Parameter(description = "예약번호", required = true, example = "RES20250001")
+            @Parameter(description = "예약번호", required = true, example = "260504-755472")
             @RequestParam String reservationId,
             @Parameter(description = "주차 번호 (없으면 빈 문자열)", example = "A-12")
             @RequestParam(required = false, defaultValue = "") String parkingNum) {
@@ -169,11 +169,13 @@ public class APIController {
             summary = "예약 임시 등록 (결제 전)",
             description = "Toss 결제 전, 예약 정보를 임시로 저장하고 reservationId를 반환합니다.\n" +
                     "반환된 reservationId를 결제 요청 시 함께 전송해야 합니다.\n\n" +
-                    "실제 처리: `POST /JHotel/onsite/pre-reserve`"
+                    "실제 처리: `POST /JHotel/onsite/pre-reserve`\n" +
+                    "## 주의사항\n" +
+                    "- **memberPhone**: 하이픈(-) 없이 숫자만 입력하세요 (최대 11자).\n"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "임시 예약 성공 - reservationId 반환",
-                    content = @Content(schema = @Schema(example = "{\"reservationId\": \"RES20250001\"}")))
+                    content = @Content(schema = @Schema(example = "{\"reservationId\": \"260504-755472\"}")))
     })
     @PostMapping("/onsite/pre-reserve")
     public ResponseEntity<Map<String, List<String>>> preReserve(
@@ -223,7 +225,7 @@ public class APIController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "예약번호",
                     required = true,
-                    content = @Content(schema = @Schema(example = "{\"reservationId\": \"RES20250001\"}"))
+                    content = @Content(schema = @Schema(example = "{\"reservationId\": \"260504-755472\"}"))
             )
             @RequestBody Map<String, String> request) {
 
@@ -248,7 +250,7 @@ public class APIController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "예약번호",
                     required = true,
-                    content = @Content(schema = @Schema(example = "{\"reservationId\": \"RES20250001\"}"))
+                    content = @Content(schema = @Schema(example = "{\"reservationId\": \"260504-755472\"}"))
             )
             @RequestBody Map<String, String> request) {
 
@@ -276,6 +278,23 @@ public class APIController {
     })
     @PostMapping("/extended/set-checkout-date")
     public ResponseEntity<Map<String, Object>> checkExtendAvailability(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "연장 확인에 필요한 데이터",
+                    content = @Content(
+                            schema = @Schema(
+                                    type = "object",
+                                    // 직접 JSON 구조를 정의
+                                    example = "{\n" +
+                                            "  \"reservationId\": \"260504-755472\",\n" +
+                                            "  \"roomNo\": 102,\n" +
+                                            "  \"checkinDate\": \"2026-05-04\",\n" +
+                                            "  \"checkoutDate\": \"2026-05-06\",\n" +
+                                            "  \"status\": \"In\",\n" +
+                                            "  \"memberNo\": 11\n" +
+                                            "}"
+                            )
+                    )
+            )
             @RequestBody Map<String, Object> params) {
 
         log.info("[API명세] 연장 가능 여부 확인 - reservationId={}", params.get("reservationId"));
@@ -449,7 +468,7 @@ public class APIController {
                     description = "카드 결제 요청 정보",
                     required = true,
                     content = @Content(schema = @Schema(example =
-                            "{\"reservationId\": \"RES20250001\", \"roomPrice\": 100000, " +
+                            "{\"reservationId\": \"260504-755472\", \"roomPrice\": 100000, " +
                                     "\"optionCharge\": 10000, \"pointAmount\": 5000, \"totalCharge\": 105000, " +
                                     "\"memberPhone\": \"01012345678\", \"paySource\": \"onsite\"}"))
             )
