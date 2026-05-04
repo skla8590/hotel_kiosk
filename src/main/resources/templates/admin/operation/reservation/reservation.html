@@ -5,34 +5,24 @@
 <body>
 <main>
     <div class="tab-bar" style="display:flex;gap:8px;margin-bottom:12px;">
-        <button class="tab-item active"
-                onclick="reservation.changeTab('RESERVATION', event)">
-            예약
-        </button>
-        <button class="tab-item"
-                onclick="reservation.changeTab('REFUND', event)">
-            환불
-        </button>
+        <button class="tab-item active" onclick="reservation.changeTab('RESERVATION', event)">예약 관리</button>
+        <button class="tab-item" onclick="reservation.changeTab('REFUND', event)">환불 내역</button>
     </div>
 
     <!-- 검색 툴바 -->
     <div class="toolbar">
         <div class="search-wrap">
             <span class="ico">🔍</span>
-            <input type="text" id="res-keyword" placeholder="예약번호 / 고객명 검색"
-                   th:value="${param.keyword}">
+            <input type="text" id="res-keyword" placeholder="예약번호 / 고객명 검색">
         </div>
-        <div class="btn-title">
-            <span>체크인 날짜</span>
-        </div>
-        <input type="date" id="res-date" class="flt-select"
-               th:value="${param.date}">
+        <div class="btn-title"><span>체크인 날짜</span></div>
+        <input type="date" id="res-date" class="flt-select">
+
         <select id="res-status" class="flt-select">
             <option value="">전체 상태</option>
-            <option value="Reserved" th:selected="${param.status == 'Reserved'}">예약</option>
-            <option value="In" th:selected="${param.status == 'In'}">체크인</option>
-            <option value="Out" th:selected="${param.status == 'Out'}">체크아웃</option>
-            <option value="Cancelled" th:selected="${param.status == 'Cancelled'}">취소</option>
+            <option value="Reserved">예약</option>
+            <option value="In">체크인</option>
+            <option value="Out">체크아웃</option>
         </select>
         <button class="btn btn-primary" onclick="reservation.search()">검색</button>
     </div>
@@ -41,53 +31,10 @@
         <div class="tbl-wrap">
             <table class="tbl">
                 <thead>
-                <tr>
-                    <th>예약번호</th>
-                    <th>고객명</th>
-                    <th>객실</th>
-                    <th>체크인</th>
-                    <th>체크아웃</th>
-                    <th>상태</th>
-                    <th>상세</th>
-                </tr>
+                <!-- JS에서 동적으로 변경 -->
                 </thead>
                 <tbody id="tbody-reservations">
-                <!-- th:each 로 서버 데이터 초기 렌더 -->
-                <th:block th:if="${#lists.isEmpty(reservations.dtoList)}">
-                    <tr th:each="r : ${reservations.dtoList}" onclick="selectRow(this)"
-                        th:data-id="${r.reservationId}">
-                        <td class="fw700" th:text="${r.reservationId}">R2026-000312</td>
-                        <td th:text="${r.memberName}">김민준</td>
-                        <td th:text="${r.roomNo}">1101</td>
-                        <td th:text="${r.checkinDate}">03/12</td>
-                        <td th:text="${r.checkoutDate}">03/14</td>
-                        <td>
-                          <span class="badge"
-                                th:classappend="${r.status == 'Reserved' ? 'badge-blue' :
-                                   r.status == 'In' ? 'badge-yellow' :
-                                   r.status == 'Out'  ? 'badge-orange' : 'badge-red'}"
-                                th:text="${r.status == 'Reserved' ? '예약' :
-                                     r.status == 'In' ? '체크인' :
-                                     r.status == 'Out'  ? '체크아웃' : '실패'}">확정
-                          </span>
-                        </td>
-                        <td>
-                            <button class="btn btn-ghost btn-xs"
-                                    th:data-id="${r.reservationId}"
-                                    onclick="reservation.loadDetail(this.dataset.id); event.stopPropagation()">
-                                상세
-                            </button>
-                        </td>
-                    </tr>
-                </th:block>
-                <!-- 데이터 없음 -->
-                <th:block th:if="${#lists.isEmpty(reservations.dtoList)}">
-                    <tr>
-                        <td colspan="7" style="text-align:center;padding:28px;color:var(--c-txt-3)">
-                            조회된 예약이 없습니다.
-                        </td>
-                    </tr>
-                </th:block>
+                <!-- JS에서 renderTable()을 통해 삽입 -->
                 </tbody>
             </table>
         </div>
@@ -141,12 +88,12 @@
 
                     <!-- 우: 상태 변경 + 옵션 -->
                     <div>
-                        <div class="section-hd">예약 상태 변경</div>
-                        <div id="status-group" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-                            <button class="btn btn-ghost btn-sm" data-status="Waiting">결제 대기</button>
-                            <button class="btn btn-primary btn-sm" data-status="Success">결제 확정</button>
-                            <button class="btn btn-danger btn-sm" data-status="Refund">취소</button>
-                        </div>
+                        <!--                        <div class="section-hd">예약 상태 변경</div>-->
+                        <!--                        <div id="status-group" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">-->
+                        <!--                            <button class="btn btn-ghost btn-sm" data-status="Waiting">결제 대기</button>-->
+                        <!--                            <button class="btn btn-primary btn-sm" data-status="Success">결제 확정</button>-->
+                        <!--                            <button class="btn btn-danger btn-sm" data-status="Refund">취소</button>-->
+                        <!--                        </div>-->
                         <div class="section-hd">선택 옵션</div>
                         <div class="detail-kv">
                             <div class="kv-row"><span class="kv-key">조식</span> <span class="kv-val"

@@ -514,6 +514,15 @@ springAi.wake.start = function () {
 
 /* 웨이크워드 모달 열기 */
 springAi.wake.showModal = function (recognition) {
+    // 타임아웃 실행 중일 시 중단
+    if (typeof countdownTimer !== 'undefined') {
+        clearInterval(countdownTimer)
+    }
+    if (typeof closeModal === 'function') {
+        closeModal('timeoutModal')
+    }
+    window.speechSynthesis.cancel() // TTS 중단
+
     document.getElementById('aiWakeWord').classList.remove('hidden');
     setTimeout(() => {
         springAi.wake.listenQuestion(recognition);
@@ -523,6 +532,12 @@ springAi.wake.showModal = function (recognition) {
 /* 웨이크워드 모달 닫기 */
 springAi.wake.closeModal = function (recognition) {
     document.getElementById('aiWakeWord').classList.add('hidden');
+
+    // 타임아웃 재시작
+    if (typeof resetIdleTimer === 'function') {
+        resetIdleTimer()
+    }
+
     recognition.start(); // 웨이크워드 감지 재시작
 };
 

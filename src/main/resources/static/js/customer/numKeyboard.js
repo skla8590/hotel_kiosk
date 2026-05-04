@@ -105,6 +105,15 @@
         panel.classList.remove('np-open')
         overlay.classList.remove('np-open')
         if (activeInput) activeInput.blur()
+
+        const padIds = ['guestBirthMonth', 'guestBirthDay']
+        padIds.forEach(id => {
+            const el = document.getElementById(id)
+            if (el && el.value.length === 1) {
+                el.value = '0' + el.value
+            }
+        })
+
         activeInput = null
         groupInputs = null
     }
@@ -141,13 +150,14 @@
                             close()
                             return
                         }
+                        activeInput = groupInputs.back
+                        renderDisplay()
+                        return
                     }
                     // 앞 칸 입력 완료되면 뒷 칸 자동 이동
-                    const nextId = activeInput.dataset.numpadNext
-                    if (nextId) {
-                        const next = document.getElementById(nextId)
-                        if (next) activeInput = next
-                    }
+                    renderDisplay()
+                    close()
+                    return
                 }
             }
 

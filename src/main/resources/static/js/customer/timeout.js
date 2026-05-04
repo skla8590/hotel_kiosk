@@ -16,6 +16,9 @@ function showTimeoutModal() {
     document.querySelector('#timeoutSec').textContent = remaining
     openModal('timeoutModal')
 
+    // AI 챗봇 서비스 안내 (TTS 음성 안내)
+    speakAIServiceGuide()
+
     // 1초마다 timeoutSec 카운트다운 (setInterval : 지정 시간마다)
     countdownTimer = setInterval(function () {
         remaining--
@@ -33,11 +36,36 @@ function showTimeoutModal() {
     }, 1000)  // 1초마다 실행
 }
 
+/* AI 챗봇 서비스 안내 (TTS 음성 안내) */
+function speakAIServiceGuide() {
+    window.speechSynthesis.cancel() // 이전에 말하던 내용 중단
+
+    const utterance = new SpeechSynthesisUtterance("도움이 필요하시면 하이 제이호텔 이라고 말씀해주세요")
+    utterance.lang = 'ko-KR'
+    utterance.rate = 0.9
+    utterance.pitch = 1.0
+    utterance.volume = 1.0
+
+    const trySpeak = () => {
+        const voices = window.speechSynthesis.getVoices()
+        const koreanVoice = voices.find(v => v.lang === 'ko-KR') // 한국어 보이스 찾기
+        if (koreanVoice) utterance.voice = koreanVoice
+        window.speechSynthesis.speak(utterance)
+    }
+
+    if (window.speechSynthesis.getVoices().length > 0) {
+        trySpeak()
+    } else {
+        window.speechSynthesis.addEventListener('voiceschanged', trySpeak, { once: true })
+    }
+}
+
 /* 화면 동작 감지 시 유휴 시간 초기화 */
 document.addEventListener('click', function () {
     // 모달 창이 열려있을 때 사용자가 클릭한다면, 카운트다운 정지 + 모달 나가기
     if (!document.getElementById('timeoutModal').classList.contains('hidden')) {
         clearInterval(countdownTimer)
+        window.speechSynthesis.cancel() // TTS 중단
         closeModal('timeoutModal')  // modal.js의 closeModal 사용
     }
     resetIdleTimer() // 1분 타이머 재시작

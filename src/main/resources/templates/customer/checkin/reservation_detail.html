@@ -353,6 +353,16 @@
         </div>
     </div>
 
+    <!-- 차량번호 4자리 미만 경고 모달 -->
+    <div class="modal-overlay hidden" id="parkingValidModal">
+        <div class="modal-box">
+            <span class="modal-msg">차량번호 4자리 입력해주세요.</span>
+            <div class="modal-btns" style="grid-template-columns: 1fr;">
+                <button class="btn-modal-yes" onclick="closeParkingValidModal()">확 인</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 재결제 오류 알림 모달 -->
     <div class="modal-overlay hidden" id="repayErrorModal">
         <div class="modal-box">
@@ -373,6 +383,18 @@
         </div>
     </div>
 
+    <!-- 웨이크 워드 활성화 모달 -->
+    <div class="modal-overlay hidden" id="aiWakeWord">
+        <div class="modal-box">
+            <div class="voice-bars" id="voiceBars">
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+            </div>
+            <span class="modal-msg" style="white-space: pre-line;">듣고 있습니다. 궁금하신 점을 말씀해주세요!</span>
+        </div>
+    </div>
+
     <!-- 타임아웃 모달 -->
     <div class="modal-overlay hidden" id="timeoutModal">
         <div class="modal-box">
@@ -385,8 +407,11 @@
 </div>
 
 <script th:src="@{/js/customer/modal.js}"></script>
+<script th:src="@{/js/customer/ai_service/springai.js}"></script>
 <script th:src="@{/js/customer/timeout.js}"></script>
 <script th:inline="javascript">
+    springAi.wake.start();
+
     // Thymeleaf에서 예약 데이터 전달 -> SMS 예약문자 전송용
     const checkinDateStr  = [[${reservation != null ? reservation.checkinDate  : null}]];
     const reservationId   = [[${reservation != null ? reservation.reservationId : null}]];
@@ -459,8 +484,17 @@
 
     function submitCheckin() {
         let parkingNum = document.getElementById('parkingNumInput').value.trim();
+        // 차량번호 4자리 미만이면 경고 모달 띄우기
+        if (parkingNum.length > 0 && parkingNum.length < 4) {
+            document.getElementById('parkingModal').classList.remove('hidden');
+            return;
+        }
         document.getElementById('parkingInputModal').classList.add('hidden');
         processCheckin(parkingNum);
+    }
+
+    function closeParkingValidModal() {
+        document.getElementById('parkingModal').classList.add('hidden');
     }
 
     function processCheckin(parkingNum) {
@@ -494,13 +528,14 @@
         fetch("/JHotel/checkin/repay-info?reservationId=" + reservationId)
             .then(function(res) { return res.json(); })
             .then(function(data) {
-                sessionStorage.setItem('reservation',   JSON.stringify({ reservationId: reservationId }));
+                sessionStorage.setItem('reservation',   JSON.stringify({ reservationId: reservationId, reservationIds: [reservationId] }));
                 sessionStorage.setItem('selectedRooms', JSON.stringify(data.selectedRooms));
                 sessionStorage.setItem('roomPrice',     data.roomPrice);
                 sessionStorage.setItem('optionCharge',  data.optionCharge);
                 sessionStorage.setItem('checkinDate',   data.checkinDate);
                 sessionStorage.setItem('checkoutDate',  data.checkoutDate);
                 sessionStorage.setItem('guestInfo',     JSON.stringify(data.guestInfo));
+                sessionStorage.setItem('roomName',      data.roomName || '');
                 sessionStorage.setItem('paySource',     'repay');
 
                 // 재결제 완료 후 돌아올 URL(체크인 페이지)

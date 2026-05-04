@@ -159,7 +159,6 @@
                        data-numpad
                        data-numpad-group="resv"
                        data-numpad-part="front"
-                       data-numpad-next="reservationBack"
                        readonly />
                 <span class="reservation-dash">-</span>
                 <input class="input-field reservation-back" id="reservationBack"
@@ -169,9 +168,6 @@
                        data-numpad-part="back"
                        readonly />
             </div>
-            <form method="post" id="reservationBtn" th:action="@{/JHotel/checkin/reservation_detail}">
-                <input type="hidden" id="hiddenReservationId" name="reservationId">
-            </form>
             <button class="btn-search" onclick="searchReservation()">예약 조회</button>
         </div>
     </div>
@@ -199,6 +195,18 @@
         <input type="hidden" id="hiddenReservationId" name="reservationId">
     </form>
 
+    <!-- 웨이크 워드 활성화 모달 -->
+    <div class="modal-overlay hidden" id="aiWakeWord">
+        <div class="modal-box">
+            <div class="voice-bars" id="voiceBars">
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+            </div>
+            <span class="modal-msg" style="white-space: pre-line;">듣고 있습니다. 궁금하신 점을 말씀해주세요!</span>
+        </div>
+    </div>
+
     <!-- 타임아웃 모달 -->
     <div class="modal-overlay hidden" id="timeoutModal">
         <div class="modal-box">
@@ -213,14 +221,13 @@
 <script th:src="@{/js/customer/header.js}"></script>
 <script th:src="@{/js/customer/numKeyboard.js}"></script>
 <script th:src="@{/js/customer/modal.js}"></script>
+<script th:src="@{/js/customer/ai_service/springai.js}"></script>
 <script th:src="@{/js/customer/timeout.js}"></script>
 <script>
+    springAi.wake.start();
 
     /* 예약 조회 */
     function searchReservation() {
-        const csrfToken = document.querySelector('meta[name="_csrf"]').content;
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
-
         const front = document.getElementById('reservationFront').value
         const back  = document.getElementById('reservationBack').value
 

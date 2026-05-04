@@ -75,6 +75,7 @@
                             </thead>
                             <tbody id="tbody-season">
                             <tr th:each="item : ${seasons}"
+                                th:if="${item.policyName != '요일 정책'}"
                                 th:data-id="${item.policyId}"
                                 th:data-name="${item.policyName}"
                                 th:data-repeat="${item.repeatType}"

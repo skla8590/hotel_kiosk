@@ -454,6 +454,18 @@
         </div>
     </div>
 
+    <!-- 웨이크 워드 활성화 모달 -->
+    <div class="modal-overlay hidden" id="aiWakeWord">
+        <div class="modal-box">
+            <div class="voice-bars" id="voiceBars">
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+            </div>
+            <span class="modal-msg" style="white-space: pre-line;">듣고 있습니다. 궁금하신 점을 말씀해주세요!</span>
+        </div>
+    </div>
+
     <!-- 타임아웃 모달 -->
     <div class="modal-overlay hidden" id="timeoutModal">
         <div class="modal-box">
@@ -468,6 +480,7 @@
 
 <script th:src="@{/js/customer/header.js}"></script>
 <script th:src="@{/js/customer/modal.js}"></script>
+<script th:src="@{/js/customer/ai_service/springai.js}"></script>
 <script th:src="@{/js/customer/timeout.js}"></script>
 <script>
     /* 뒤로가기로 접근(BFCache 복원)시, 애니메이션 효과 재실행 */
@@ -488,6 +501,8 @@
             })
         }
     })
+
+    springAi.wake.start();
 
     /* 객실 상세 정보 */
     const roomDescription = ({

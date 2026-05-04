@@ -16,13 +16,6 @@
         ORDER BY stock_id
     </select>
 
-    <!-- 재고 경보 조회 -->
-    <select id="findStockByWarning" resultType="hotel_kiosk.domain.admin.Stocks">
-        SELECT *
-        FROM hotel_kiosk.stocks
-        WHERE stock_status = 'Shortage'
-    </select>
-
     <!-- 재고 품목 조회 -->
     <select id="findStockByName" resultType="hotel_kiosk.domain.admin.Stocks">
         SELECT *
@@ -37,17 +30,7 @@
         WHERE stock_status = #{stockStatus}
     </select>
 
-    <!-- 재고 수량 수정 -->
-    <update id="updateStockUp">
-        UPDATE hotel_kiosk.stocks
-        SET stock_count = (stock_count + 1)
-        WHERE stock_id = #{stockId}
-    </update>
-    <update id="updateStockDown">
-        UPDATE hotel_kiosk.stocks
-        SET stock_count = (stock_count - 1)
-        WHERE stock_id = #{stockId}
-    </update>
+    <!-- 재고 수정 -->
     <update id="updateStock">
         UPDATE hotel_kiosk.stocks
         SET stock_count = #{stockCount}, min_stock = #{minStock}

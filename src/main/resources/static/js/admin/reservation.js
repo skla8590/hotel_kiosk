@@ -5,13 +5,13 @@ window.reservation = (() => {
 
     function STATUS_MAP(status) {
         const map = {
-            'Reserved': { text: '예약', class: 'badge-blue' },
-            'In': { text: '체크인', class: 'badge-yellow' },
-            'Out': { text: '체크아웃', class: 'badge-orange' },
-            'Cancelled': { text: '취소', class: 'badge-red' }
+            'Reserved': {text: '예약', class: 'badge-blue'},
+            'In': {text: '체크인', class: 'badge-yellow'},
+            'Out': {text: '체크아웃', class: 'badge-orange'},
+            'Cancelled': {text: '취소', class: 'badge-red'}
         };
 
-        const s = map[status] || { text: '기타', class: 'badge-gray' };
+        const s = map[status] || {text: '기타', class: 'badge-gray'};
 
         return `<span class="badge ${s.class}">${s.text}</span>`;
     }
@@ -30,10 +30,26 @@ window.reservation = (() => {
     function changeTab(tab, e) {
         currentTab = tab;
 
+        // 1. 탭 활성화 UI 처리
         document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
         e.target.classList.add('active');
 
-        updateTitle();     // 제목 변경
+        // 2. 필터 요소 초기화
+        const keywordInput = document.querySelector('#res-keyword');
+        const dateInput = document.querySelector('#res-date');
+        const statusSelect = document.querySelector('#res-status');
+
+        if (keywordInput) keywordInput.value = '';  // 검색어 초기화
+        if (dateInput) dateInput.value = '';        // 날짜 초기화
+        if (statusSelect) statusSelect.value = '';  // 상태 필터 초기화
+
+        // 3. 환불 내역 탭일 때 상태 필터 숨기기 (선택 사항)
+        if (statusSelect) {
+            statusSelect.style.display = (tab === 'REFUND') ? 'none' : 'inline-block';
+        }
+
+        // 4. 제목 변경 및 재조회
+        updateTitle();
         search();
     }
 
@@ -48,30 +64,29 @@ window.reservation = (() => {
         }
     }
 
-    window.movePage = function(page) {
+    window.movePage = function (page) {
         reservation.search(page)
     }
 
     /** 예약 목록 조회 */
     async function search(page = 1) {
         const keyword = document.querySelector('#res-keyword')?.value.trim();
-        const date    = document.querySelector('#res-date')?.value;
-        const status  = document.querySelector('#res-status')?.value;
+        const date = document.querySelector('#res-date')?.value;
+
+        // 수정: 'Refund' 대신 'Cancelled'로 변경하여 취소된 내역을 불러오도록 설정
+        const status = (currentTab === 'REFUND') ? 'Cancelled' : document.querySelector('#res-status')?.value;
 
         const params = {page};
-
         if (keyword) params.keyword = keyword;
         if (date) params.date = date;
         if (status) params.payStatus = status;
 
         try {
-            const res = await axios.get('/admin/reservation/search', { params });
-
+            const res = await axios.get('/admin/reservation/search', {params});
             const data = res.data;
 
             renderTable(data.dtoList);
-            renderPagination(data)
-
+            renderPagination(data);
         } catch (e) {
             console.error(e);
         }
@@ -203,13 +218,16 @@ window.reservation = (() => {
     /** 저장 */
     function save(id) {
         const payload = {
-            checkinDate  : document.querySelector('#res-edit-checkin')?.value,
-            checkoutDate : document.querySelector('#res-edit-checkout')?.value,
-            roomNo   : Number(document.querySelector('#res-edit-room')?.value),
-            payStatus   : selectedStatus
+            checkinDate: document.querySelector('#res-edit-checkin')?.value,
+            checkoutDate: document.querySelector('#res-edit-checkout')?.value,
+            roomNo: Number(document.querySelector('#res-edit-room')?.value),
+            payStatus: selectedStatus
         };
         _ajax('PUT', `/admin/reservation/${id}`, payload, (err) => {
-            if (err) { showAlertModal('저장이 실패되었습니다'); return; }
+            if (err) {
+                showAlertModal('저장이 실패되었습니다');
+                return;
+            }
             showAlertModal('변경 사항이 저장되었습니다.');
             closeModal('modal-res-detail');
             loadReservations();
@@ -220,99 +238,80 @@ window.reservation = (() => {
     let currentStatus = null;
     let selectedStatus = null;
 
-    document.querySelectorAll('#status-group button').forEach(btn => {
-        btn.addEventListener('click', function () {
-
-            const newStatus = this.dataset.status;
-
-
-            if (currentStatus === 'Refund') {
-                showAlertModal('이미 취소된 예약은 상태 변경이 불가능합니다.');
-                return;
-            }
-
-            // 1. 기존 선택 제거
-            document.querySelectorAll('#status-group button')
-                .forEach(b => b.classList.remove('active'));
-
-            // 2. 현재 버튼 선택 표시
-            this.classList.add('active');
-
-            // 선택 확인 모달
-            showAlertModal(`${newStatus === 'Waiting' ? '대기' :
-                newStatus === 'Success' ? '확정' : '취소'}되었습니다.
-                <br>(저장 버튼을 클릭하여야 반영됩니다.)`);
-
-            // 3. 값 저장
-            selectedStatus = this.dataset.status;
-        });
-    });
-
     function renderTable(list) {
         const tbody = document.getElementById('tbody-reservations');
-        const thead = document.querySelector('.tbl thead tr');
+        // .tbl 클래스 내부의 thead 요소를 선택 (tr까지 선택하지 말고 head에서 멈춤)
+        const thead = document.querySelector('.tbl thead');
+
+        if (!tbody || !thead) {
+            console.error("테이블 요소를 찾을 수 없습니다.");
+            return;
+        }
 
         if (!list || list.length === 0) {
             tbody.innerHTML = `
             <tr>
-                <td colspan="7" style="text-align:center;padding:28px;color:var(--c-txt-3)">
-                    조회된 예약이 없습니다.
+                <td colspan="8" style="text-align:center;padding:28px;color:var(--c-txt-3)">
+                    조회된 데이터가 없습니다.
                 </td>
             </tr>
         `;
             return;
         }
 
+        // 탭에 따라 헤더 행(tr)을 생성하여 삽입
         if (currentTab === 'RESERVATION') {
-
             thead.innerHTML = `
-            <th>예약번호</th>
-            <th>고객명</th>
-            <th>객실</th>
-            <th>체크인</th>
-            <th>체크아웃</th>
-            <th>상태</th>
-            <th>상세</th>
-        `;
-
-            tbody.innerHTML = list.map(r => `
-        <tr>
-            <td>${r.reservationId}</td>
-            <td>${r.memberName}</td>
-            <td>${r.roomNo}</td>
-            <td>${r.checkinDate}</td>
-            <td>${r.checkoutDate}</td>
-            <td>${STATUS_MAP(r.status)}</td>
-            <td>
-                <button class="btn btn-ghost btn-xs" onclick="reservation.loadDetail('${r.reservationId}')">
-                    상세
-                </button>
-            </td>
-        </tr>
-        `).join('');
-        }
-
-        if (currentTab === 'REFUND') {
-
-            thead.innerHTML = `
-            <th>예약번호</th>
-            <th>고객명</th>
-            <th>객실</th>
-            <th>체크인</th>
-            <th>환불금액</th>
-            <th>상태</th>
+            <tr>
+                <th>예약번호</th>
+                <th>고객명</th>
+                <th>객실</th>
+                <th>체크인</th>
+                <th>체크아웃</th>
+                <th>상태</th>
+                <th>상세</th>
+            </tr>
         `;
 
             tbody.innerHTML = list.map(r => `
             <tr>
-                <td>${r.reservationId}</td>
+                <td class="fw700">${r.reservationId}</td>
+                <td>${r.memberName}</td>
+                <td>${r.roomNo}</td>
+                <td>${r.checkinDate}</td>
+                <td>${r.checkoutDate}</td>
+                <td>${STATUS_MAP(r.status)}</td>
+                <td>
+                    <button class="btn btn-ghost btn-xs" onclick="reservation.loadDetail('${r.reservationId}')">
+                        상세
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        } else if (currentTab === 'REFUND') {
+            // 헤더에서 '환불금액'과 '처리' 제거
+            thead.innerHTML = `
+            <tr>
+                <th>예약번호</th>
+                <th>고객명</th>
+                <th>객실</th>
+                <th>체크인</th>
+                <th>결제금액</th>
+                <th>상태</th>
+            </tr>
+            `;
+
+            // 데이터 행에서 해당 컬럼들 제거
+            tbody.innerHTML = list.map(r => `
+            <tr>
+                <td class="fw700">${r.reservationId}</td>
                 <td>${r.memberName}</td>
                 <td>${r.roomNo}</td>
                 <td>${r.checkinDate}</td>
                 <td>₩${Number(r.totalAmount ?? 0).toLocaleString()}</td>
-                <td><span class="badge badge-orange">환불 완료</span></td>
+                <td><span class="badge badge-red">취소 완료</span></td>
             </tr>
-        `).join('');
+            `).join('');
         }
     }
 
@@ -334,7 +333,7 @@ window.reservation = (() => {
 
             // 탭 active 변경
             const refundTabBtn = document.querySelectorAll('.tab-item')[1];
-            reservation.changeTab('REFUND', { target: refundTabBtn });
+            reservation.changeTab('REFUND', {target: refundTabBtn});
 
             updateTitle();
             search();

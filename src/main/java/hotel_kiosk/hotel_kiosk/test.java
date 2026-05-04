@@ -1,4 +1,4 @@
-package hotel_kiosk;
+package hotel_kiosk.hotel_kiosk;
 
 import java.util.ArrayList;
 import java.util.List;

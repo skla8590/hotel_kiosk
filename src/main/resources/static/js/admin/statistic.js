@@ -66,14 +66,21 @@ const statistic = (() => {
         document.getElementById('totalCheckIn').innerText =
             `${data.totalCheckIn || 0}건`;
 
-        document.getElementById('revenueGrowth').innerText =
-            `↑ 전월 대비 +${Math.floor((data.revenueGrowth || 0))}%`;
+        if (data.revenueGrowth >= 0) {
+            document.getElementById('revenueGrowth').innerText =
+                `↑ 전월 대비 ${(data.revenueGrowth || 0)}%`;
+        } else {
+            document.getElementById('revenueGrowth').innerText =
+                `↑ 전월 대비 ${(data.revenueGrowth || 0)}%`;
+        }
 
-        document.getElementById('occupancyGoal').innerText =
-            `목표 ${data.occupancyGoal || 0}%`;
-
-        document.getElementById('checkInGrowth').innerText =
-            `↑ 전월 대비 +${(data.checkInGrowth || 0)}%`;
+        if (data.checkInGrowth >= 0) {
+            document.getElementById('checkInGrowth').innerText =
+                `↑ 전월 대비 ${(data.checkInGrowth || 0)}%`;
+        } else {
+            document.getElementById('checkInGrowth').innerText =
+                `↑ 전월 대비 ${(data.checkInGrowth || 0)}%`;
+        }
 
 
         renderPaymentChart(data.paymentRevenues);

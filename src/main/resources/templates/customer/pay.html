@@ -840,6 +840,35 @@
         const billRows = document.getElementById('billRows')
         let html = ''
 
+        const paySource = sessionStorage.getItem('paySource') || 'onsite'
+
+        // 재결제
+        if (paySource === 'repay' || !selectedRooms || selectedRooms.length === 0) {
+            const roomPrice = parseInt(sessionStorage.getItem('roomPrice') || '0')
+            const optionCharge = parseInt(sessionStorage.getItem('optionCharge') || '0')
+            const roomName = sessionStorage.getItem('roomName') || preReservation?.roomName || '-'
+            const totalSum = roomPrice + optionCharge
+
+            const optionHtml = optionCharge > 0
+                ? `<span class="bill-price-sub">옵션 +${optionCharge.toLocaleString()}원</span>`
+                : `<span class="bill-price-sub">- 옵션 선택 사항 없음</span>`
+
+            html = `
+            <div class="bill-row">
+                <div class="bill-item">
+                    <span class="bill-name">${roomName}</span>
+                    ${optionHtml}
+                </div>
+                <div class="bill-prices">
+                    <span class="bill-price">${roomPrice.toLocaleString()}원</span>
+                </div>
+            </div>`
+
+            billRows.innerHTML = html
+            document.getElementById('totalAmt').textContent = totalSum.toLocaleString() + '원'
+            return
+        }
+
         let totalSum = 0;
         let totalRoomPrice = 0;
         let totalOptionCharge = 0;

@@ -217,6 +217,18 @@
         </div>
     </div>
 
+    <!-- 웨이크 워드 활성화 모달 -->
+    <div class="modal-overlay hidden" id="aiWakeWord">
+        <div class="modal-box">
+            <div class="voice-bars" id="voiceBars">
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+            </div>
+            <span class="modal-msg" style="white-space: pre-line;">듣고 있습니다. 궁금하신 점을 말씀해주세요!</span>
+        </div>
+    </div>
+
     <!-- 타임아웃 모달 -->
     <div class="modal-overlay hidden" id="timeoutModal">
         <div class="modal-box">
@@ -230,6 +242,7 @@
 
 <script th:src="@{/js/customer/header.js}"></script>
 <script th:src="@{/js/customer/modal.js}"></script>
+<script th:src="@{/js/customer/ai_service/springai.js}"></script>
 <script th:src="@{/js/customer/timeout.js}"></script>
 <script>
     /* 뒤로가기로 접근(BFCache 복원)시, 애니메이션 효과 재실행 */
@@ -250,6 +263,8 @@
             })
         }
     })
+
+    springAi.wake.start();
 
     const csrfToken = document.querySelector('meta[name="_csrf"]').content;
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
@@ -330,7 +345,8 @@
                     yesBtn.onclick = function () {
                         // 체크아웃 날짜 업데이트해 세션 재저장
                         sessionStorage.setItem('newCheckoutDate', JSON.stringify(newCheckoutDate))
-                        sessionStorage.setItem('reservation', JSON.stringify(reservation))
+                        const reservationWithIds = Object.assign({}, reservation, { reservationIds: [reservation.reservationId] })
+                        sessionStorage.setItem('reservation', JSON.stringify(reservationWithIds))
 
                         // 객실 상세 정보, 회원 정보 세션 저장
                         if (data.roomInfo && data.memberInfo) {

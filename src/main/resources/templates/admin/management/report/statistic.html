@@ -19,7 +19,6 @@
       <option value="MONTH" th:selected="${param.unit == 'MONTH'}">월별</option>
     </select>
     <button class="btn btn-primary" onclick="statistic.search()">조회</button>
-    <button class="btn btn-ghost ml-auto" onclick="statistic.downloadExcel()">📥 엑셀 다운로드</button>
   </div>
 
   <!-- 탭 -->
@@ -39,7 +38,7 @@
              : '₩0'}">₩0</div>
       <div id="revenueGrowth" class="sc-sub"
            th:text="${statSummary != null && statSummary.revenueGrowth != null
-             ? '↑ 전월 대비 +' + statSummary.revenueGrowth + '%'
+             ? '↑ 전월 대비 ' + statSummary.revenueGrowth + '%'
              : ''}"></div>
     </div>
 
@@ -49,11 +48,6 @@
            th:text="${statSummary != null && statSummary.avgOccupancy != null
              ? statSummary.avgOccupancy + '%'
              : '0%'}">0%</div>
-      <div id="occupancyGoal" class="sc-sub"
-           style="color:var(--c-txt-3)"
-           th:text="${statSummary != null && statSummary.occupancyGoal != null
-             ? '목표 ' + statSummary.occupancyGoal + '%'
-             : ''}"></div>
     </div>
 
     <div class="stat-card">
@@ -64,7 +58,7 @@
              : '0건'}">0건</div>
       <div id="checkInGrowth" class="sc-sub"
            th:text="${statSummary != null && statSummary.checkInGrowth != null
-             ? '↑ 전월 대비 +' + statSummary.checkInGrowth + '%'
+             ? '↑ 전월 대비 ' + statSummary.checkInGrowth + '%'
              : ''}"></div>
     </div>
   </div>

@@ -108,7 +108,7 @@
         <div class="header-left">
             <button class="btn-home" onclick="goHome()">홈</button>
             <div class="tab-bar">
-                <button class="tab active">호텔 안내</button>
+                <button class="tab active" onclick="goInfo()">호텔 안내</button>
             </div>
         </div>
 
@@ -153,6 +153,18 @@
 
     <div class="bottom-spacer"></div>
 
+    <!-- 웨이크 워드 활성화 모달 -->
+    <div class="modal-overlay hidden" id="aiWakeWord">
+        <div class="modal-box">
+            <div class="voice-bars" id="voiceBars">
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+            </div>
+            <span class="modal-msg" style="white-space: pre-line;">듣고 있습니다. 궁금하신 점을 말씀해주세요!</span>
+        </div>
+    </div>
+
     <!-- 타임아웃 모달 -->
     <div class="modal-overlay hidden" id="timeoutModal">
         <div class="modal-box">
@@ -166,6 +178,7 @@
 
 <script th:src="@{/js/customer/header.js}"></script>
 <script th:src="@{/js/customer/2actionBtns.js}"></script>
+<script th:src="@{/js/customer/ai_service/springai.js}"></script>
 <script th:src="@{/js/customer/modal.js}"></script>
 <script th:src="@{/js/customer/timeout.js}"></script>
 <script>
@@ -190,6 +203,9 @@
 
     /* 이전 선택 정보 초기화 (세션에 저장된 정보 모두 초기화) */
     sessionStorage.clear()
+
+    /* AI 채팅 서비스 호출 */
+    springAi.wake.start();
 
     const btnOnSite = document.querySelector('.btn-left')
     const btnExtended = document.querySelector('.btn-right')

@@ -218,12 +218,19 @@
 
 <div class="kiosk">
 
-  <!-- 상단 네비 -->
   <div class="header">
-    <button class="btn-home" onclick="goHome()">홈</button>
-    <div class="tab-bar">
-      <button class="tab active">호텔 안내</button>
+    <div class="header-left">
+      <button class="btn-home" onclick="goHome()">홈</button>
+      <div class="tab-bar">
+        <button class="tab active" onclick="goInfo()">호텔 안내</button>
+      </div>
     </div>
+
+    <button class="btn-back" onclick="goBack()">
+      <svg class="back-icon" viewBox="0 0 24 24">
+        <path d="M11.67 3.87L9.9 2.1 0 12l9.9 9.9 1.77-1.77L3.54 12z" />
+      </svg>
+    </button>
   </div>
 
   <!-- 페이지 타이틀 바 -->
@@ -265,6 +272,18 @@
     <button class="btn-prev" onclick="goBack()">이전으로</button>
   </div>
 
+  <!-- 웨이크 워드 활성화 모달 -->
+  <div class="modal-overlay hidden" id="aiWakeWord">
+    <div class="modal-box">
+      <div class="voice-bars" id="voiceBars">
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+      </div>
+      <span class="modal-msg" style="white-space: pre-line;">듣고 있습니다. 궁금하신 점을 말씀해주세요!</span>
+    </div>
+  </div>
+
   <!-- 타임아웃 모달 -->
   <div class="modal-overlay hidden" id="timeoutModal">
     <div class="modal-box">
@@ -277,9 +296,13 @@
 
 </div>
 
+<script th:src="@{/js/customer/ai_service/springai.js}"></script>
 <script th:src="@{/js/customer/modal.js}"></script>
 <script th:src="@{/js/customer/timeout.js}"></script>
 <script th:inline="javascript">
+  /* AI 채팅 서비스 호출 */
+  springAi.wake.start();
+
   /* ── 서버 데이터 바인딩 ── */
   const posts = JSON.parse(/*[[${informBoardsJson}]]*/ '[]');
 

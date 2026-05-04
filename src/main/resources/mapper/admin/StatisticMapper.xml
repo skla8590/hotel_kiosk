@@ -66,20 +66,5 @@
 
         GROUP BY om.option_name;
     </select>
-    <select id="excelDownload">
-        SELECT
-            r.reservation_id,
-            r.checkin_date,
-            r.checkout_date,
-            rm.room_type,
-            p.total_charge,
-            p.pay_method,
-            p.pay_status
-        FROM reservations r
-                 JOIN room_master rm ON r.room_no = rm.room_no
-                 LEFT JOIN payments p ON r.idx = p.idx
-        WHERE r.checkin_date BETWEEN #{startDate} AND #{endDate}
-        ORDER BY r.checkin_date DESC;
-    </select>
 
 </mapper>

@@ -335,6 +335,18 @@
         </div>
     </div>
 
+    <!-- 웨이크 워드 활성화 모달 -->
+    <div class="modal-overlay hidden" id="aiWakeWord">
+        <div class="modal-box">
+            <div class="voice-bars" id="voiceBars">
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+            </div>
+            <span class="modal-msg" style="white-space: pre-line;">듣고 있습니다. 궁금하신 점을 말씀해주세요!</span>
+        </div>
+    </div>
+
     <!-- 타임아웃 모달 -->
     <div class="modal-overlay hidden" id="timeoutModal">
         <div class="modal-box">
@@ -348,8 +360,12 @@
 
 <script th:src="@{/js/customer/header.js}"></script>
 <script th:src="@{/js/customer/modal.js}"></script>
+<script th:src="@{/js/customer/ai_service/springai.js}"></script>
 <script th:src="@{/js/customer/timeout.js}"></script>
 <script>
+    /* AI 채팅 서비스 호출 */
+    springAi.wake.start();
+
     /* 최종 정보 불러오기 */
     const selectedRooms = JSON.parse(sessionStorage.getItem('selectedRooms') || '[]')
     const guestInfo = JSON.parse(sessionStorage.getItem('guestInfo') || '{}')

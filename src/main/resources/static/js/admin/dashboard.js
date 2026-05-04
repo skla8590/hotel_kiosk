@@ -13,7 +13,7 @@ const dashboard = (() => {
         // });
         _ajax('GET', '/admin/dashboard/stock/alerts', {}, (err, data) => {
             if (!err || data) {
-                renderAlertList(data.list);
+                renderAlertList(data);
             }
         });
     }
@@ -29,15 +29,15 @@ const dashboard = (() => {
 
         list.forEach(item => {
             const row = document.createElement('div');
-            row.className = 'alert-row ' + (item.level === 'DANGER' ? 'danger' : 'warn');
+            row.className = 'alert-row ' + (item.stockStatus === 'Shortage' ? 'warn' : 'danger');
 
             row.innerHTML = `
             <div class="alert-left">
-                <span class="alert-name">${item.name}</span>
-                <span class="alert-detail">잔량 ${item.qty}개 / 최소 ${item.minQty}개</span>
+                <span class="alert-name">${item.stockName}</span>
+                <span class="alert-detail">잔량 ${item.stockCount}개 / 최소 ${item.minStock}개</span>
             </div>
             <span class="badge ${item.level === 'DANGER' ? 'badge-red' : 'badge-yellow'}">
-                ${item.level === 'DANGER' ? '부족' : '경고'}
+                ${item.level === 'DANGER' ? '경고' : '부족'}
             </span>
         `;
 
